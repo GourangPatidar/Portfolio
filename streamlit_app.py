@@ -24,6 +24,17 @@ project_3_page = st.Page(
     title="Youtube Vedio Summarizer",
     icon=":material/bar_chart:",
 )
+project_4_page = st.Page(
+    "views/textsummarizer.py",
+    title="Text Summarizer",
+    icon=":material/bar_chart:",
+)
+
+project_5_page = st.Page(
+    "views/search.py",
+    title="Search",
+    icon=":material/bar_chart:",
+)
 
 
 # --- NAVIGATION SETUP [WITHOUT SECTIONS] ---
@@ -33,7 +44,7 @@ project_3_page = st.Page(
 pg = st.navigation(
     {
         "INFO": [about_page],
-        "PROJECTS": [project_1_page, project_2_page, project_3_page],
+        "PROJECTS": [project_1_page, project_2_page, project_3_page , project_4_page , project_5_page],
     }
 )
 
