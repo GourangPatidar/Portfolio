@@ -31,6 +31,14 @@ st.write(
     - Macro Vision Academy, Burhanpur , class 11th -12th , 2019-2021
     """
 )
+st.write("\n")
+st.subheader("Experience", anchor=False)
+st.write(
+    """
+    - Machine Learning Engineer at Ineuron.ai 
+    - Python Mentor at Codeyoung
+    """
+)
 
 # --- SKILLS ---
 st.write("\n")
