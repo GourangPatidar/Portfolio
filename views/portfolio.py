@@ -24,24 +24,22 @@ with col2:
 
 # --- EXPERIENCE & QUALIFICATIONS ---
 st.write("\n")
-st.subheader("Experience & Qualifications", anchor=False)
+st.subheader("Education ", anchor=False)
 st.write(
     """
-    - 7 Years experience extracting actionable insights from data
-    - Strong hands-on experience and knowledge in Python and Excel
-    - Good understanding of statistical principles and their respective applications
-    - Excellent team-player and displaying a strong sense of initiative on tasks
+    - Jabalpur Engineering College , B.Tech in Artificial Intelligenge and Data Science , 2021-2025
+    - Macro Vision Academy, Burhanpur , class 11th -12th , 2019-2021
     """
 )
 
 # --- SKILLS ---
 st.write("\n")
-st.subheader("Hard Skills", anchor=False)
+st.subheader("Skills", anchor=False)
 st.write(
     """
-    - Programming: Python (Scikit-learn, Pandas), SQL, VBA
-    - Data Visualization: PowerBi, MS Excel, Plotly
-    - Modeling: Logistic regression, linear regression, decision trees
-    - Databases: Postgres, MongoDB, MySQL
+    - Data Analytics:- Numpy , PowerBi , MS-Excel ,MYSQL , Pandas ,Matplotlib and Seaborn
+    - Machine Learning: Python ,Scikit-learn , AWS , AZURE ,ML Algorithms ,Statistics & Probability
+    - Deep Learning: Natural Language Processing ,Computer Vision, Tensorflow , Keras , Neural Networks , Mathematics and Linear Algebra
+    - GenAI- Langchain , Llama Index , OpenAI , Gemini Pro
     """
 )
