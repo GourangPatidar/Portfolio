@@ -16,7 +16,7 @@ with col1:
 with col2:
     st.title("GOURANG PATIDAR", anchor=False)
     st.write(
-        "Senior Data Analyst, assisting enterprises by supporting data-driven decision-making."
+        "EX-ML intern at Ineuron.ai"
     )
     #if st.button("✉️ Contact Me"):
         #show_contact_form()
