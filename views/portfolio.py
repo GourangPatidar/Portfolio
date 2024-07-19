@@ -6,9 +6,9 @@ from PIL import Image
 
 # --- PATH SETTINGS ---
 current_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
-css_file = "/Users/gourangpatidar/DataScience/Steamlit/styles/main.css"
-resume_file = "/Users/gourangpatidar/DataScience/Steamlit/assets/Gourang Patidar Resume.pdf"
-profile_pic = "/Users/gourangpatidar/DataScience/Steamlit/assets/profile Picture.jpg"
+css_file = "./styles/main.css"
+resume_file = "./assets/Gourang Patidar Resume.pdf"
+profile_pic = "./assets/profile Picture.jpg"
 
 # --- GENERAL SETTINGS ---
 PAGE_TITLE = "Digital CV | GOURANG PATIDAR"
