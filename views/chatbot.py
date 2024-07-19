@@ -1,5 +1,5 @@
 import streamlit as st
-from langchain.llms import OpenAI
+from openai import OpenAI
 
 # Show title and description.
 openai_api_key=st.secrets["OPENAI_API_KEY"]
