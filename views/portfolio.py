@@ -1,5 +1,5 @@
 import streamlit as st
-
+'''
 from forms.contact import contact_form
 
 
@@ -7,7 +7,7 @@ from forms.contact import contact_form
 def show_contact_form():
     contact_form()
 
-
+'''
 # --- HERO SECTION ---
 col1, col2 = st.columns(2, gap="small", vertical_alignment="center")
 with col1:
