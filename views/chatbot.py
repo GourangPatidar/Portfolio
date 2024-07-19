@@ -1,5 +1,6 @@
 import streamlit as st
 from openai import OpenAI
+st.header("GoGPT" , divider="rainbow")
 
 # Show title and description.
 openai_api_key=st.secrets["OPENAI_API_KEY"]
