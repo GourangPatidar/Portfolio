@@ -31,7 +31,7 @@ project_4_page = st.Page(
 )
 
 project_5_page = st.Page(
-    "views/block.py",
+    "views/search.py",
     title="Search",
     icon=":material/thumb_up:",
 )
