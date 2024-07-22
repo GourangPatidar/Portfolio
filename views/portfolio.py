@@ -3,6 +3,13 @@ from pathlib import Path
 import streamlit as st
 from PIL import Image
 
+from forms.contact import contact_form
+
+
+@st.experimental_dialog("Contact Me")
+def show_contact_form():
+    contact_form()
+
 
 # --- PATH SETTINGS ---
 current_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
@@ -60,6 +67,8 @@ with col2:
         file_name=resume_file,
         mime="application/octet-stream",
     )
+    if st.button("✉️ Contact Me"):
+        show_contact_form()
 st.write("📫", EMAIL ,)
 
 st.write('\n')

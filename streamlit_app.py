@@ -31,9 +31,9 @@ project_4_page = st.Page(
 )
 
 project_5_page = st.Page(
-    "views/search.py",
+    "views/block.py",
     title="Search",
-    icon=":material/bar_chart:",
+    icon=":material/thumb_up:",
 )
 
 
@@ -51,7 +51,7 @@ pg = st.navigation(
 
 # --- SHARED ON ALL PAGES ---
 st.logo("assets/profile Picture.jpg")
-st.sidebar.markdown("Made by gourang patidar")
+st.sidebar.markdown("Copyright © 2024 GourangPatidar")
 
 
 # --- RUN NAVIGATION ---

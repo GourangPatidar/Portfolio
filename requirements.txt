@@ -7,3 +7,4 @@ langchain-openai
 duckduckgo-search
 pillow
 pathlib
+youtube-transcript-api
