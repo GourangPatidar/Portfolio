@@ -10,7 +10,7 @@ about_page = st.Page(
 )
 project_1_page = st.Page(
     "views/searchinpaper.py",
-    title="Search in Research Paper",
+    title="Search in Paper",
     icon=":material/bar_chart:",
 )
 project_2_page = st.Page(
