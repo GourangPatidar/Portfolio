@@ -8,3 +8,9 @@ duckduckgo-search
 pillow
 pathlib
 youtube-transcript-api
+cassio
+datasets
+langchain
+openai
+tiktoken
+PyMuPDF
