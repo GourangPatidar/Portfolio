@@ -16,3 +16,4 @@ tiktoken
 PyMuPDF
 PyPDF2
 google-generativeai
+beautifulsoup4
