@@ -36,6 +36,13 @@ project_5_page = st.Page(
     icon=":material/thumb_up:",
 )
 
+project_6_page = st.Page(
+    "views/quiz.py",
+    title="Quiz",
+    icon=":material/thumb_up:",
+)
+
+
 
 # --- NAVIGATION SETUP [WITHOUT SECTIONS] ---hello
 # pg = st.navigation(pages=[about_page, project_1_page, project_2_page])
@@ -44,7 +51,7 @@ project_5_page = st.Page(
 pg = st.navigation(
     {
         "INFO": [about_page],
-        "PROJECTS": [project_1_page, project_2_page, project_3_page , project_4_page , project_5_page],
+        "PROJECTS": [project_1_page, project_2_page, project_3_page , project_4_page , project_5_page , project_6_page],
     }
 )
 
