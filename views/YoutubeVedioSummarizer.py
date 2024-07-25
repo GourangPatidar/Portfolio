@@ -37,17 +37,17 @@ def get_video_transcript(video_id):
         return None
 
 # Function to generate summary using Google Gemini Pro API with language selection
-def generate_gemini_content(transcript_text, prompt, language):
+def generate_gemini_content(transcript_text, prompt, language, word_count):
     try:
         if language == "English":
             model = genai.GenerativeModel("gemini-pro")
-        elif language == "Chinese":
-            model = genai.GenerativeModel("gemini-pro-chinese")
+        elif language == "Hindi":
+            model = genai.GenerativeModel("gemini-pro-hindi")
         else:
             st.warning("Language not supported.")
             return None
         
-        response = model.generate_content(prompt + transcript_text)
+        response = model.generate_content(prompt.format(word_count=word_count) + transcript_text)
         return response.text
     except Exception as e:
         st.error(f"Error generating content: {str(e)}")
@@ -58,7 +58,11 @@ st.title("YouTube Transcript to Detailed Notes Converter")
 youtube_link = st.text_input("Enter YouTube Video Link:")
 
 # Dropdown for selecting summary language
-language = st.selectbox("Select Summary Language:", ["English", "Chinese"])
+language = st.selectbox("Select Summary Language:", ["English", "Hindi"])
+
+# Dropdown for selecting word count
+word_count_options = [100, 200, 250, 400]
+word_count = st.selectbox("Select Word Count for Summary:", word_count_options)
 
 if youtube_link:
     video_id = extract_video_id(youtube_link)
@@ -73,13 +77,15 @@ if st.button("Get Detailed Notes"):
         if video_id:
             transcript_text = get_video_transcript(video_id)
             if transcript_text:
-                # English prompt for summary
+                # English and Hindi prompts for summary
                 prompt_english = """Hello, I am your YouTube video summarizer. I will take the transcript text and summarize the entire video, providing an important summary within {word_count} words. Please provide the summary of the text given here: """
+                prompt_hindi = """नमस्कार, मैं आपका YouTube वीडियो सारांशकर्ता हूं। मैं ट्रांसक्रिप्ट पाठ को लेकर वीडियो का सारांश दूंगा, {word_count} शब्दों के भीतर महत्वपूर्ण सारांश प्रदान करें। कृपया दिए गए पाठ का सारांश प्रदान करें: """
 
-                # Replace {word_count} placeholder with a default value or user input if needed
-                word_count = 150
-
-                summary = generate_gemini_content(transcript_text, prompt_english.format(word_count=word_count), language)
+                if language == "English":
+                    summary = generate_gemini_content(transcript_text, prompt_english, language, word_count)
+                elif language == "Hindi":
+                    summary = generate_gemini_content(transcript_text, prompt_hindi, language, word_count)
+                
                 if summary:
                     st.markdown("## Detailed Notes:")
                     st.write(summary)
