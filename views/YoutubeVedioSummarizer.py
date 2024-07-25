@@ -19,11 +19,7 @@ within 250 words. Please provide the summary of the text given here: {text}"""
 
 
 llm_chain = LLMChain(llm=llm, prompt=first_input_prompt)
-parent = SimpleSequentialChain(
-        chains=[llm_chain],
-        input_variables=['text'],
-        
-    )
+
 
 # Function to extract video ID from YouTube URL
 def extract_video_id(url):
@@ -51,8 +47,7 @@ def get_video_transcript(video_id):
 # Function to summarize video transcript using OpenAI API
 def summarize_video_transcript(video_id):
     transcript_text = get_video_transcript(video_id)
-    response=parent({"text":transcript_text})
-    return response
+    llm_chain.run(transcript_text)
 
 # Streamlit UI
 
