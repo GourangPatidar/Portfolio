@@ -2,12 +2,29 @@ import streamlit as st
 from youtube_transcript_api import YouTubeTranscriptApi
 from langchain_openai import ChatOpenAI
 from langchain import LLMChain, PromptTemplate
+from langchain.chains import SequentialChain
 
 # OpenAI API key (replace with your own)
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
+
 llm = ChatOpenAI(api_key=OPENAI_API_KEY)
-template="you are the youtube video summarizer , given text you have to summarize the content"
-llm_chain = LLMChain(llm=llm, prompt=PromptTemplate( template=template))
+
+first_input_prompt = PromptTemplate(
+        input_variables=['text'],
+        template="""You are Yotube video summarizer. You will be taking the transcript text
+and summarizing the entire video and providing the important summary in points
+within 250 words. Please provide the summary of the text given here: {text}"""
+    )
+
+
+
+llm_chain = LLMChain(llm=llm, prompt=first_input_prompt)
+parent = SequentialChain(
+        chains=[llm_chain],
+        input_variables=['text'],
+        
+    )
+
 # Function to extract video ID from YouTube URL
 def extract_video_id(url):
     if 'youtu.be/' in url:
@@ -34,7 +51,8 @@ def get_video_transcript(video_id):
 # Function to summarize video transcript using OpenAI API
 def summarize_video_transcript(video_id):
     transcript_text = get_video_transcript(video_id)
-    return llm_chain.run(transcript_text)
+    response=parent({"text":transcript_text})
+    return response
 
 # Streamlit UI
 
