@@ -1,5 +1,5 @@
 import json
-from langchain.llms import OpenAI
+from langchain.llms import OpenAI as LangChainOpenAI
 from openai import OpenAI
 from langchain import LLMChain, PromptTemplate
 from PyPDF2 import PdfReader
@@ -45,7 +45,7 @@ def extract_text_from_url(url):
     return text
 
 # Initialize OpenAI language model
-llm = OpenAI(api_key=OPENAI_API_KEY)
+openai_model = OpenAI(api_key=OPENAI_API_KEY)
 
 # Define the prompt template for generating quiz questions
 template = """
@@ -82,7 +82,7 @@ example:
 """
 
 # Initialize LangChain LLMChain with the prompt template
-llm_chain = LLMChain(llm=llm, prompt=PromptTemplate(input_variables=["num_questions", "language", "subject", "schooling_level", "level", "question_type"], template=template))
+llm_chain = LLMChain(llm=LangChainOpenAI(api_key=OPENAI_API_KEY), prompt=PromptTemplate(input_variables=["num_questions", "language", "subject", "schooling_level", "level", "question_type"], template=template))
 
 # Streamlit app setup
 st.title("Quiz Generator")
@@ -128,8 +128,6 @@ elif question_type == "True/False":
     type_filter = "true_false"
 else:
     type_filter = "both"
-
-
 
 if st.button("Generate Quiz"):
     # Ensure subject is not empty before generating the quiz
