@@ -1,13 +1,13 @@
 import streamlit as st
 from youtube_transcript_api import YouTubeTranscriptApi
 from langchain_openai import ChatOpenAI
-from langchain import LLMChain
+from langchain import LLMChain, PromptTemplate
 
 # OpenAI API key (replace with your own)
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 llm = ChatOpenAI(api_key=OPENAI_API_KEY)
 template="you are the youtube video summarizer , given text you have to summarize the content"
-llm_chain = LLMChain(llm=llm,  template=template)
+llm_chain = LLMChain(llm=llm, prompt=PromptTemplate( template=template))
 # Function to extract video ID from YouTube URL
 def extract_video_id(url):
     if 'youtu.be/' in url:
