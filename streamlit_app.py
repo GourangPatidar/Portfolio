@@ -52,6 +52,7 @@ project_6_page = st.Page(
 pg = st.navigation(
     {
         "INFO": [about_page],
+        st.subheader("Products" , divider="rainbow")
         "PROJECTS": [project_1_page, project_2_page, project_3_page , project_4_page , project_5_page , project_6_page],
     }
 )
