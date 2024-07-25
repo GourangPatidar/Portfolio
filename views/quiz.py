@@ -41,7 +41,6 @@ def extract_text_from_url(url):
         text = '\n'.join([p.get_text() for p in paragraphs])
     else:
         text = ""  # Handle other types of URLs as needed
-    st.write(text)
     return text
 
 # Initialize OpenAI language model
@@ -56,7 +55,7 @@ Recipe = {{
     "question": "str",
     "options": "list",
     "answer": "str",
-    "type": "str"  # Add a type field for indicating question type (multiple_choice / true_false / numeric / etc.)
+    "type": "str",  # Add a type field for indicating question type (multiple_choice / true_false / numeric / etc.)
     "explanation": "str"  # Add an explanation for the answer
 }} 
 Return: list[Recipe]
@@ -144,6 +143,9 @@ if st.button("Generate Quiz"):
         # Generate the quiz using LangChain
         try:
             raw_response = llm_chain.run(inputs)
+            st.write("Raw Response:", raw_response)  # Print raw response for debugging
+
+            # Attempt to parse JSON
             data = json.loads(raw_response)
 
             # Filter questions based on selected type before saving to session_state
