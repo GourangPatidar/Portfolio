@@ -45,7 +45,7 @@ def extract_text_from_url(url):
     return text
 
 # Initialize OpenAI language model
-llm = OpenAI(api_key=OPENAI_API_KEY, model_name="gpt-3.5-turbo", max_tokens=4096)
+llm = OpenAI(api_key=OPENAI_API_KEY)
 
 # Define the prompt template for generating quiz questions
 template = """
