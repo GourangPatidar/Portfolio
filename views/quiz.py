@@ -132,7 +132,7 @@ elif input_type == "Text":
     input_text = st.text_area("Enter Text")
     subject = input_text.strip()
 
-elif input_type == "Blog URL" or input_type == "Video URL":
+elif input_type == "Blog URL":
     url = st.text_input(f"Enter {input_type} URL")
     
     if st.button("Fetch Content"):
