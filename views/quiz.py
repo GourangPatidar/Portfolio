@@ -44,7 +44,7 @@ def extract_text_from_url(url):
     return text
 
 # Initialize OpenAI language model
-openai_model = ChatOpenAI(api_key=OPENAI_API_KEY)
+llm = ChatOpenAI(api_key=OPENAI_API_KEY)
 
 # Define the prompt template for generating quiz questions
 template = """
@@ -81,7 +81,7 @@ example:
 """
 
 # Initialize LangChain LLMChain with the prompt template
-llm_chain = LLMChain(llm=LangChainOpenAI(api_key=OPENAI_API_KEY), prompt=PromptTemplate(input_variables=["num_questions", "language", "subject", "schooling_level", "level", "question_type"], template=template))
+llm_chain = LLMChain(llm=llm, prompt=PromptTemplate(input_variables=["num_questions", "language", "subject", "schooling_level", "level", "question_type"], template=template))
 
 # Streamlit app setup
 st.title("Quiz Generator")
