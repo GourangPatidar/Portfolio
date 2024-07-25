@@ -48,7 +48,7 @@ project_6_page = st.Page(
 #pg = st.navigation(pages=[about_page, project_1_page, project_2_page])
 
 # --- NAVIGATION SETUP [WITH SECTIONS]---
-st.sidebar.markdown("PRODUCTS")
+
 pg = st.navigation(
     {
         "INFO": [about_page],
