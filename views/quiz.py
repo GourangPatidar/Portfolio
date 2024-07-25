@@ -143,7 +143,7 @@ if st.button("Generate Quiz"):
         # Generate the quiz using LangChain
         try:
             raw_response = llm_chain.run(inputs)
-            st.write("Raw Response:", raw_response)  # Print raw response for debugging
+        
 
             # Attempt to parse JSON
             data = json.loads(raw_response)
