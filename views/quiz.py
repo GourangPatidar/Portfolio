@@ -1,6 +1,6 @@
 import json
 from langchain.llms import OpenAI as LangChainOpenAI
-from openai import OpenAI
+from langchain_openai import ChatOpenAI
 from langchain import LLMChain, PromptTemplate
 from PyPDF2 import PdfReader
 import streamlit as st
@@ -44,7 +44,7 @@ def extract_text_from_url(url):
     return text
 
 # Initialize OpenAI language model
-openai_model = OpenAI(api_key=OPENAI_API_KEY)
+openai_model = ChatOpenAI(api_key=OPENAI_API_KEY)
 
 # Define the prompt template for generating quiz questions
 template = """
