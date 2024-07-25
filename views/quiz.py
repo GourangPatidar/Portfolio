@@ -43,6 +43,35 @@ def extract_text_from_url(url):
         text = ""  # Handle other types of URLs as needed
     return text
 
+def extract_video_id(url):
+    # Check if the URL contains 'youtu.be/' format
+    if 'youtu.be/' in url:
+        video_id_index = url.index('youtu.be/') + len('youtu.be/')
+        video_id = url[video_id_index:]
+        
+        return video_id
+    
+    # Check if the URL contains 'watch?v=' format
+    elif 'watch?v=' in url:
+        video_id_index = url.index('watch?v=') + len('watch?v=')
+        video_id = url[video_id_index:]
+        
+        return video_id
+    
+    # If the URL format is not recognized
+    else:
+        return None
+
+def get_video_transcript(video_id):
+    try:
+        transcript = YouTubeTranscriptApi.get_transcript(video_id)
+        transcript_text = ' '.join([entry['text'] for entry in transcript])
+        return transcript_text
+    except Exception as e:
+        print(f"Error fetching transcript: {str(e)}")
+        return None
+
+
 # Initialize OpenAI language model
 llm = ChatOpenAI(api_key=OPENAI_API_KEY)
 
@@ -110,6 +139,16 @@ elif input_type == "Blog URL" or input_type == "Video URL":
         if url:
             subject = extract_text_from_url(url).strip()
             st.write(subject)
+        else:
+            st.warning("Please enter a valid URL.")
+elif input_type=="Video URL":
+    url = st.text_input(f"Enter {input_type} URL")
+
+    if st.button("Fetch Content"):
+        if url:
+            video_id = extract_video_id(url)
+            subject = get_video_transcript(video_id)
+        
         else:
             st.warning("Please enter a valid URL.")
 
