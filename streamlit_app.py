@@ -48,17 +48,18 @@ project_6_page = st.Page(
 # pg = st.navigation(pages=[about_page, project_1_page, project_2_page])
 
 # --- NAVIGATION SETUP [WITH SECTIONS]---
+'''
 pg = st.navigation(
     {
         "INFO": [about_page],
         "PROJECTS": [project_1_page, project_2_page, project_3_page , project_4_page , project_5_page , project_6_page],
     }
 )
-
+'''
 
 # --- SHARED ON ALL PAGES ---
 st.logo("assets/profile Picture.jpg")
-st.sidebar.markdown("Copyright © 2024 GourangPatidar@")
+st.sidebar.markdown("Copyright © 2024 GourangPatidar")
 
 
 # --- RUN NAVIGATION ---
