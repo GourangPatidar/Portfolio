@@ -2,7 +2,7 @@ import streamlit as st
 from youtube_transcript_api import YouTubeTranscriptApi
 from langchain_openai import ChatOpenAI
 from langchain import LLMChain, PromptTemplate
-from langchain.chains import SequentialChain
+from langchain.chains import SimpleSequentialChain
 
 # OpenAI API key (replace with your own)
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
@@ -19,7 +19,7 @@ within 250 words. Please provide the summary of the text given here: {text}"""
 
 
 llm_chain = LLMChain(llm=llm, prompt=first_input_prompt)
-parent = SequentialChain(
+parent = SimpleSequentialChain(
         chains=[llm_chain],
         input_variables=['text'],
         
