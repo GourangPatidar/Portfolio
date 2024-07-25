@@ -1,5 +1,6 @@
 import json
 from langchain.llms import OpenAI
+from opeai import OpenAI
 from langchain import LLMChain, PromptTemplate
 from PyPDF2 import PdfReader
 import streamlit as st
