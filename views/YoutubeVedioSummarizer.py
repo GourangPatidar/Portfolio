@@ -73,7 +73,7 @@ youtube_link = st.text_input("Enter YouTube Video Link:")
 if youtube_link:
     video_id = extract_video_id(youtube_link)
     
-    st.image(f"http://img.youtube.com/vi/{video_id}/0.jpg", use_column_width=True)
+    st.image(f"http://img.youtube.com/vi/{video_id}/hqdefault.jpg", use_column_width=True)
 
 if st.button("Get Detailed Notes"):
     video_id=extract_video_id(youtube_link)
