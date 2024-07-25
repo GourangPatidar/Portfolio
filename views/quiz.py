@@ -111,7 +111,6 @@ elif input_type == "Blog URL" or input_type == "Video URL":
         if url:
             subject = extract_text_from_url(url).strip()
             st.write(subject)
-            st.write("hii")
         else:
             st.warning("Please enter a valid URL.")
 
@@ -155,8 +154,9 @@ if st.button("Generate Quiz"):
 
             st.session_state.questions = filtered_questions
             st.success("Quiz generated successfully!")
-        except json.JSONDecodeError:
-            st.error(f"Error decoding JSON from response: {raw_response}")
+        except json.JSONDecodeError as e:
+            st.error(f"Error decoding JSON from response: {e}")
+            st.error(f"Raw response: {raw_response}")
         except Exception as e:
             st.error(f"An unexpected error occurred: {str(e)}")
     else:
