@@ -45,7 +45,7 @@ project_6_page = st.Page(
 
 
 # --- NAVIGATION SETUP [WITHOUT SECTIONS] ---hello
-# pg = st.navigation(pages=[about_page, project_1_page, project_2_page])
+pg = st.navigation(pages=[about_page, project_1_page, project_2_page])
 
 # --- NAVIGATION SETUP [WITH SECTIONS]---
 '''
