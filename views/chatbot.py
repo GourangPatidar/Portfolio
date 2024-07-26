@@ -71,7 +71,7 @@ elif selected_option=="web":
 
 
 # Input field for search query
-    query = st.text_input("Search Query", "who is rohit sharma")
+    query = st.text_input("Search Query")
 
     if st.button("Search"):
         if query:
