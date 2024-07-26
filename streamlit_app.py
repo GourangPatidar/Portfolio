@@ -59,7 +59,7 @@ pg = st.navigation(
 
 # --- SHARED ON ALL PAGES ---
 st.logo("assets/profile Picture.jpg")
-st.sidebar.markdown("Copyright gour")
+st.sidebar.markdown("© 2024 The Gourang Patidar. All Rights Reserved.")
 
 
 # --- RUN NAVIGATION ---
