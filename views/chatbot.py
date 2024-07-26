@@ -9,6 +9,10 @@ client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 openai_api_key=st.secrets["OPENAI_API_KEY"]
 api_key_serp=st.secrets["SERP_API_KEY"]
 
+css_file = "./styles/main.css"
+with open(css_file) as f:
+    st.markdown("<style>{}</style>".format(f.read()), unsafe_allow_html=True)
+
 selected_option = st.selectbox("Select an option", ["GPT", "web"])
 
 if selected_option=="GPT":
