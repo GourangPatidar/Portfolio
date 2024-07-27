@@ -7,6 +7,7 @@ import streamlit as st
 from youtube_transcript_api import YouTubeTranscriptApi
 from bs4 import BeautifulSoup
 import requests
+from openai.error import OpenAIError
 
 # Load OpenAI API key from Streamlit secrets
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
@@ -48,11 +49,13 @@ def extract_video_id(url):
         video_id_index = url.index('youtu.be/') + len('youtu.be/')
         video_id = url[video_id_index:]
         return video_id
+    
     # Check if the URL contains 'watch?v=' format
     elif 'watch?v=' in url:
         video_id_index = url.index('watch?v=') + len('watch?v=')
         video_id = url[video_id_index:]
         return video_id
+    
     # If the URL format is not recognized
     else:
         return None
@@ -72,7 +75,7 @@ llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-4o-mini")
 # Define the prompt template for generating quiz questions
 template = """
 Using the following JSON schema,
-Please list {num_questions} quiz questions in {language} on {subject} for {schooling_level} and difficulty level of the quiz should be {level} and of type {question_type}.
+Please list {num_questions} quiz questions in {language} on {subject} for {schooling_level} and difficulty level of the quiz should be {level} and of type {question_type} .
 Make sure to return the data in JSON format exactly matching this schema.
 Recipe = {{
     "question": "str",
@@ -80,7 +83,7 @@ Recipe = {{
     "answer": "str",
     "type": "str",  # Add a type field for indicating question type (multiple_choice / true_false / numeric / etc.)
     "explanation": "str"  # Add an explanation for the answer
-}}
+}} 
 Return: list[Recipe]
 
 example:
@@ -99,7 +102,6 @@ example:
         "type": "true_false",
         "explanation": "J.K. Rowling is indeed the author of the Harry Potter series."
     }},
-    
 ]
 """
 
@@ -108,7 +110,7 @@ llm_chain = LLMChain(llm=llm, prompt=PromptTemplate(input_variables=["num_questi
 
 # Streamlit app setup
 st.title("Quiz Generator")
-subject=""
+subject = ""
 
 # User inputs
 input_type = st.selectbox("Input Type", ["Text", "PDF", "Blog URL", "Video URL"])
@@ -135,7 +137,7 @@ elif input_type == "Blog URL":
             st.write(subject)
         else:
             st.warning("Please enter a valid URL.")
-elif input_type=="Video URL":
+elif input_type == "Video URL":
     url = st.text_input(f"Enter {input_type} URL")
 
     if st.button("Fetch Content"):
@@ -162,6 +164,14 @@ else:
 if st.button("Generate Quiz"):
     # Ensure subject is not empty before generating the quiz
     if subject:
+        # Check content length
+        content_length = len(subject)
+        max_content_length = 10000  # Set this threshold according to your needs
+
+        if content_length > max_content_length:
+            st.warning(f"The content length ({content_length} characters) exceeds the limit of {max_content_length} characters. Consider reducing the length of your input content.")
+            return
+
         # Generate the prompt inputs
         inputs = {
             "num_questions": num_questions,
@@ -175,34 +185,34 @@ if st.button("Generate Quiz"):
         # Generate the quiz using LangChain
         try:
             raw_response = llm_chain.run(inputs)
-        
-            # Debugging output: print raw response
-            st.write("Raw response:", raw_response)
 
-            # Extract JSON part from response
-            json_start_idx = raw_response.find("[")
-            json_end_idx = raw_response.rfind("]")
-            if json_start_idx != -1 and json_end_idx != -1:
-                json_response = raw_response[json_start_idx:json_end_idx + 1]
-                data = json.loads(json_response)
-            else:
-                raise ValueError("No JSON part found in response")
+            # Check if the response is too large
+            if len(raw_response) > 4000:  # Adjust this threshold based on your needs
+                st.warning("The response is too large. Please adjust the parameters to generate a smaller response.")
+                return
 
-            # Check if the number of questions generated is less than requested
-            if len(data) < num_questions:
-                st.warning(f"Only {len(data)} questions were generated. You may want to adjust the parameters.")
+            # Attempt to parse JSON
+            try:
+                data = json.loads(raw_response)
 
-            # Filter questions based on selected type before saving to session_state
-            filtered_questions = []
-            for question in data:
-                if type_filter == "both" or question["type"] == type_filter:
-                    filtered_questions.append(question)
+                # Check if the number of questions is less than requested
+                if len(data) < num_questions:
+                    st.warning(f"Only {len(data)} questions were generated. You may want to adjust the parameters.")
 
-            st.session_state.questions = filtered_questions
-            st.success("Quiz generated successfully!")
-        except json.JSONDecodeError as e:
-            st.error(f"Error decoding JSON from response: {e}")
-            st.error(f"Raw response: {raw_response}")
+                # Filter questions based on selected type before saving to session_state
+                filtered_questions = []
+                for question in data:
+                    if type_filter == "both" or question["type"] == type_filter:
+                        filtered_questions.append(question)
+
+                st.session_state.questions = filtered_questions
+                st.success("Quiz generated successfully!")
+
+            except json.JSONDecodeError:
+                st.warning("The response could not be decoded as JSON. Please try again with different parameters.")
+
+        except OpenAIError as e:
+            st.warning(f"An issue occurred with the request: {str(e)}. Please try again with different parameters.")
         except Exception as e:
             st.error(f"An unexpected error occurred: {str(e)}")
     else:
