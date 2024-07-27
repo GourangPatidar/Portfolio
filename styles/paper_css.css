@@ -1,4 +1,4 @@
-
+/* Base styling for the body */
 body {
     font-family: 'Arial', sans-serif;
     background-color: #f4f4f9;
@@ -7,6 +7,7 @@ body {
     color: #333;
 }
 
+/* Container for the main content */
 main {
     max-width: 800px;
     margin: 2rem auto;
@@ -47,10 +48,16 @@ input[type="text"] {
     width: 100%;
     padding: 0.5rem;
     font-size: 1rem;
-    border: 2px solid #007bff;
+    border: 2px solid #ccc;
     border-radius: 5px;
     margin-bottom: 1rem;
     box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+input[type="text"]:focus {
+    border-color: #007bff;
 }
 
 /* Styling for the submit button */
@@ -67,6 +74,17 @@ button {
 
 button:hover {
     background-color: #0056b3;
+}
+
+/* Styling for the output area */
+.stMarkdown {
+    background-color: #e8f5e9;
+    border-left: 5px solid #66bb6a;
+    padding: 1rem;
+    border-radius: 5px;
+    margin-top: 1rem;
+    font-size: 1rem;
+    color: #2e7d32;
 }
 
 /* Additional styling for the sidebar */
