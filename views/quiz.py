@@ -189,7 +189,7 @@ if st.button("Generate Quiz"):
             # Check if the response is too large
             if len(raw_response) > 4000:  # Adjust this threshold based on your needs
                 st.warning("The response is too large. Please adjust the parameters to generate a smaller response.")
-                return
+                
 
             # Attempt to parse JSON
             try:
