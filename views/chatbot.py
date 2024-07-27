@@ -64,7 +64,7 @@ elif selected_option=="web":
             params = {
             "engine": "google",
             "q": query,
-            "api_key": "148cd270379c28b4a2522374c3c02bc8d68d2c2459bc1f3516173518ca3de1ec"  # Replace with your actual API key
+            "api_key": api_key_serp  # Replace with your actual API key
             }
             search = GoogleSearch(params)
             results = search.get_dict()
