@@ -8,7 +8,6 @@ from youtube_transcript_api import YouTubeTranscriptApi
 from bs4 import BeautifulSoup
 import requests
 
-
 # Load OpenAI API key from Streamlit secrets
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 
@@ -179,24 +178,31 @@ if st.button("Generate Quiz"):
             # Check token length here if possible
             raw_response = llm_chain.run(inputs)
             
+            # Log or display the raw response for debugging
+            st.write("Raw response from API:", raw_response)
+            
             # Attempt to parse JSON
-            data = json.loads(raw_response)
-
-            # Filter questions based on selected type before saving to session_state
-            filtered_questions = []
-            for question in data:
-                if type_filter == "both" or question["type"] == type_filter:
-                    filtered_questions.append(question)
-
-            if len(filtered_questions) < num_questions:
-                st.warning(f"Only {len(filtered_questions)} questions were generated. Consider changing your parameters.")
+            try:
+                data = json.loads(raw_response)
                 
-            st.session_state.questions = filtered_questions
-            st.success("Quiz generated successfully!")
-        except json.JSONDecodeError as e:
-            st.error("Error decoding JSON from response. Please check your input parameters.")
+                # Filter questions based on selected type before saving to session_state
+                filtered_questions = []
+                for question in data:
+                    if type_filter == "both" or question["type"] == type_filter:
+                        filtered_questions.append(question)
+
+                if len(filtered_questions) < num_questions:
+                    st.warning(f"Only {len(filtered_questions)} questions were generated. Consider changing your parameters.")
+                    
+                st.session_state.questions = filtered_questions
+                st.success("Quiz generated successfully!")
+            except json.JSONDecodeError as e:
+                st.error("Error decoding JSON from response. Please check your input parameters.")
         except Exception as e:
-            st.error(f"An unexpected error occurred: {str(e)}")
+            if "maximum context length" in str(e).lower():
+                st.warning("The input content might be too long. Please try with shorter content or fewer questions.")
+            else:
+                st.error(f"An unexpected error occurred: {str(e)}")
     else:
         st.warning("Please provide content (text, PDF, blog URL, or video URL) before generating the quiz.")
 
