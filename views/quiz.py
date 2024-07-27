@@ -1,13 +1,13 @@
 import json
+import streamlit as st
 from langchain.llms import OpenAI as LangChainOpenAI
 from langchain_openai import ChatOpenAI
 from langchain import LLMChain, PromptTemplate
 from PyPDF2 import PdfReader
-import streamlit as st
 from youtube_transcript_api import YouTubeTranscriptApi
 from bs4 import BeautifulSoup
 import requests
-from openai.error import OpenAIError
+
 
 # Load OpenAI API key from Streamlit secrets
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
@@ -66,7 +66,7 @@ def get_video_transcript(video_id):
         transcript_text = ' '.join([entry['text'] for entry in transcript])
         return transcript_text
     except Exception as e:
-        print(f"Error fetching transcript: {str(e)}")
+        st.error(f"Error fetching transcript: {str(e)}")
         return None
 
 # Initialize OpenAI language model
@@ -96,7 +96,7 @@ example:
         "explanation": "The Pacific Ocean is the largest and deepest ocean on Earth."
     }},
     {{
-        "question": " J.K. Rowling is the author of the Harry Potter series.",
+        "question": "J.K. Rowling is the author of the Harry Potter series.",
         "options": ["True", "False"],
         "answer": "True",
         "type": "true_false",
@@ -164,14 +164,6 @@ else:
 if st.button("Generate Quiz"):
     # Ensure subject is not empty before generating the quiz
     if subject:
-        # Check content length
-        content_length = len(subject)
-        max_content_length = 10000  # Set this threshold according to your needs
-
-        if content_length > max_content_length:
-            st.warning(f"The content length ({content_length} characters) exceeds the limit of {max_content_length} characters. Consider reducing the length of your input content.")
-            return
-
         # Generate the prompt inputs
         inputs = {
             "num_questions": num_questions,
@@ -184,35 +176,25 @@ if st.button("Generate Quiz"):
 
         # Generate the quiz using LangChain
         try:
+            # Check token length here if possible
             raw_response = llm_chain.run(inputs)
-
-            # Check if the response is too large
-            if len(raw_response) > 4000:  # Adjust this threshold based on your needs
-                st.warning("The response is too large. Please adjust the parameters to generate a smaller response.")
-                
-
+            
             # Attempt to parse JSON
-            try:
-                data = json.loads(raw_response)
+            data = json.loads(raw_response)
 
-                # Check if the number of questions is less than requested
-                if len(data) < num_questions:
-                    st.warning(f"Only {len(data)} questions were generated. You may want to adjust the parameters.")
+            # Filter questions based on selected type before saving to session_state
+            filtered_questions = []
+            for question in data:
+                if type_filter == "both" or question["type"] == type_filter:
+                    filtered_questions.append(question)
 
-                # Filter questions based on selected type before saving to session_state
-                filtered_questions = []
-                for question in data:
-                    if type_filter == "both" or question["type"] == type_filter:
-                        filtered_questions.append(question)
-
-                st.session_state.questions = filtered_questions
-                st.success("Quiz generated successfully!")
-
-            except json.JSONDecodeError:
-                st.warning("The response could not be decoded as JSON. Please try again with different parameters.")
-
-        except OpenAIError as e:
-            st.warning(f"An issue occurred with the request: {str(e)}. Please try again with different parameters.")
+            if len(filtered_questions) < num_questions:
+                st.warning(f"Only {len(filtered_questions)} questions were generated. Consider changing your parameters.")
+                
+            st.session_state.questions = filtered_questions
+            st.success("Quiz generated successfully!")
+        except json.JSONDecodeError as e:
+            st.error("Error decoding JSON from response. Please check your input parameters.")
         except Exception as e:
             st.error(f"An unexpected error occurred: {str(e)}")
     else:
