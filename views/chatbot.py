@@ -3,7 +3,7 @@ from openai import OpenAI
 from serpapi import GoogleSearch
 from urllib.parse import urlparse
 
-st.header("GoGPT" , divider="rainbow")
+st.header("SearchGPT" , divider="rainbow")
 
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 openai_api_key=st.secrets["OPENAI_API_KEY"]
