@@ -47,16 +47,12 @@ def extract_video_id(url):
     if 'youtu.be/' in url:
         video_id_index = url.index('youtu.be/') + len('youtu.be/')
         video_id = url[video_id_index:]
-        
         return video_id
-    
     # Check if the URL contains 'watch?v=' format
     elif 'watch?v=' in url:
         video_id_index = url.index('watch?v=') + len('watch?v=')
         video_id = url[video_id_index:]
-        
         return video_id
-    
     # If the URL format is not recognized
     else:
         return None
@@ -146,7 +142,6 @@ elif input_type=="Video URL":
         if url:
             video_id = extract_video_id(url)
             subject = get_video_transcript(video_id)
-        
         else:
             st.warning("Please enter a valid URL.")
 
@@ -186,8 +181,9 @@ if st.button("Generate Quiz"):
 
             # Extract JSON part from response
             json_start_idx = raw_response.find("[")
-            if json_start_idx != -1:
-                json_response = raw_response[json_start_idx:]
+            json_end_idx = raw_response.rfind("]")
+            if json_start_idx != -1 and json_end_idx != -1:
+                json_response = raw_response[json_start_idx:json_end_idx + 1]
                 data = json.loads(json_response)
             else:
                 raise ValueError("No JSON part found in response")
