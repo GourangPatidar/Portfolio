@@ -1,58 +1,74 @@
 import streamlit as st
-from dotenv import load_dotenv
-
-load_dotenv() ##load all the nevironment variables
-import os
-import google.generativeai as genai
-
 from youtube_transcript_api import YouTubeTranscriptApi
+from langchain_openai import ChatOpenAI
+from langchain import LLMChain, PromptTemplate
+from langchain.chains import SimpleSequentialChain
 
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+# OpenAI API key (replace with your own)
+OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 
-prompt="""You are Yotube video summarizer. You will be taking the transcript text
+llm = ChatOpenAI(api_key=OPENAI_API_KEY)
+
+first_input_prompt = PromptTemplate(
+        input_variables=['text'],
+        template="""You are Yotube video summarizer. You will be taking the transcript text
 and summarizing the entire video and providing the important summary in points
-within 250 words. Please provide the summary of the text given here:  """
+within 250 words. Please provide the summary of the text given here: {text}"""
+    )
 
 
-## getting the transcript data from yt videos
-def extract_transcript_details(youtube_video_url):
+
+llm_chain = LLMChain(llm=llm, prompt=first_input_prompt)
+
+
+# Function to extract video ID from YouTube URL
+def extract_video_id(url):
+    if 'youtu.be/' in url:
+        video_id_index = url.index('youtu.be/') + len('youtu.be/')
+        video_id = url[video_id_index:]
+        return video_id
+    elif 'watch?v=' in url:
+        video_id_index = url.index('watch?v=') + len('watch?v=')
+        video_id = url[video_id_index:]
+        return video_id
+    else:
+        return None
+
+# Function to get video transcript from YouTube
+def get_video_transcript(video_id):
     try:
-        video_id=youtube_video_url.split("=")[1]
-        
-        transcript_text=YouTubeTranscriptApi.get_transcript(video_id)
-
-        transcript = ""
-        for i in transcript_text:
-            transcript += " " + i["text"]
-
-        return transcript
-
+        transcript = YouTubeTranscriptApi.get_transcript(video_id)
+        transcript_text = ' '.join([entry['text'] for entry in transcript])
+        return transcript_text
     except Exception as e:
-        raise e
+        st.error(f"Error fetching transcript: {str(e)}")
+        return None
+
+# Function to summarize video transcript using OpenAI API
+def summarize_video_transcript(video_id):
+    transcript_text = get_video_transcript(video_id)
+    llm_chain.run(transcript_text)
+
+# Streamlit UI
+
+st.title('YouTube Video Summarizer')
     
-## getting the summary based on Prompt from Google Gemini Pro
-def generate_gemini_content(transcript_text,prompt):
-
-    model=genai.GenerativeModel("gemini-pro")
-    response=model.generate_content(prompt+transcript_text)
-    return response.text
-
-
-youtube_link = st.text_input("Enter YouTube Video Link:")
-
-if youtube_link:
-    video_id = youtube_link.split("=")[1]
-    print(video_id)
-    st.image(f"http://img.youtube.com/vi/{video_id}/0.jpg", use_column_width=True)
-
-if st.button("Get Detailed Notes"):
-    transcript_text=extract_transcript_details(youtube_link)
-
-    if transcript_text:
-        summary=generate_gemini_content(transcript_text,prompt)
-        st.markdown("## Detailed Notes:")
-        st.write(summary)
-
-
+    # Input for YouTube URL
+youtube_url = st.text_input('Enter YouTube URL:', '')
+    
+if st.button('Summarize'):
+    if youtube_url:
+        video_id = extract_video_id(youtube_url)
+        if video_id:
+            summary = summarize_video_transcript(video_id)
+            if summary:
+                st.subheader('Summary:')
+                st.write(summary)
+            else:
+                st.warning('Failed to summarize transcript.')
+        else:
+            st.warning('Invalid YouTube URL. Please enter a valid URL.')
+    else:
+        st.warning('Please enter a YouTube URL.')
 
 

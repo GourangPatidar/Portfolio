@@ -1,6 +1,6 @@
 import json
-from langchain.llms import OpenAI
-from openai import OpenAI
+from langchain.llms import OpenAI as LangChainOpenAI
+from langchain_openai import ChatOpenAI
 from langchain import LLMChain, PromptTemplate
 from PyPDF2 import PdfReader
 import streamlit as st
@@ -41,11 +41,38 @@ def extract_text_from_url(url):
         text = '\n'.join([p.get_text() for p in paragraphs])
     else:
         text = ""  # Handle other types of URLs as needed
-    st.write(text)
     return text
 
+def extract_video_id(url):
+    # Check if the URL contains 'youtu.be/' format
+    if 'youtu.be/' in url:
+        video_id_index = url.index('youtu.be/') + len('youtu.be/')
+        video_id = url[video_id_index:]
+        
+        return video_id
+    
+    # Check if the URL contains 'watch?v=' format
+    elif 'watch?v=' in url:
+        video_id_index = url.index('watch?v=') + len('watch?v=')
+        video_id = url[video_id_index:]
+        
+        return video_id
+    
+    # If the URL format is not recognized
+    else:
+        return None
+
+def get_video_transcript(video_id):
+    try:
+        transcript = YouTubeTranscriptApi.get_transcript(video_id)
+        transcript_text = ' '.join([entry['text'] for entry in transcript])
+        return transcript_text
+    except Exception as e:
+        print(f"Error fetching transcript: {str(e)}")
+        return None
+
 # Initialize OpenAI language model
-llm = OpenAI(api_key=OPENAI_API_KEY, model_name="gpt-3.5-turbo", max_tokens=4096)
+llm = ChatOpenAI(api_key=OPENAI_API_KEY)
 
 # Define the prompt template for generating quiz questions
 template = """
@@ -56,7 +83,7 @@ Recipe = {{
     "question": "str",
     "options": "list",
     "answer": "str",
-    "type": "str"  # Add a type field for indicating question type (multiple_choice / true_false / numeric / etc.)
+    "type": "str",  # Add a type field for indicating question type (multiple_choice / true_false / numeric / etc.)
     "explanation": "str"  # Add an explanation for the answer
 }} 
 Return: list[Recipe]
@@ -104,16 +131,26 @@ elif input_type == "Text":
     input_text = st.text_area("Enter Text")
     subject = input_text.strip()
 
-elif input_type == "Blog URL" or input_type == "Video URL":
+elif input_type == "Blog URL" :
     url = st.text_input(f"Enter {input_type} URL")
     
     if st.button("Fetch Content"):
         if url:
             subject = extract_text_from_url(url).strip()
             st.write(subject)
-            st.write("hii")
         else:
             st.warning("Please enter a valid URL.")
+elif input_type=="Video URL":
+    url = st.text_input(f"Enter {input_type} URL")
+
+    if st.button("Fetch Content"):
+        if url:
+            video_id = extract_video_id(url)
+            subject = get_video_transcript(video_id)
+        
+        else:
+            st.warning("Please enter a valid URL.")
+
 
 schooling_level = st.selectbox("Schooling Level", ["Primary", "Secondary", "High School", "College", "University"])
 num_questions = st.number_input("Number of Questions", min_value=1, max_value=20, step=1)
@@ -128,8 +165,6 @@ elif question_type == "True/False":
     type_filter = "true_false"
 else:
     type_filter = "both"
-
-
 
 if st.button("Generate Quiz"):
     # Ensure subject is not empty before generating the quiz
@@ -147,6 +182,9 @@ if st.button("Generate Quiz"):
         # Generate the quiz using LangChain
         try:
             raw_response = llm_chain.run(inputs)
+            st.write("Raw Response:", raw_response)  # Print raw response for debugging
+
+            # Attempt to parse JSON
             data = json.loads(raw_response)
 
             # Filter questions based on selected type before saving to session_state
@@ -157,8 +195,9 @@ if st.button("Generate Quiz"):
 
             st.session_state.questions = filtered_questions
             st.success("Quiz generated successfully!")
-        except json.JSONDecodeError:
-            st.error(f"Error decoding JSON from response: {raw_response}")
+        except json.JSONDecodeError as e:
+            st.error(f"Error decoding JSON from response: {e}")
+            st.error(f"Raw response: {raw_response}")
         except Exception as e:
             st.error(f"An unexpected error occurred: {str(e)}")
     else:

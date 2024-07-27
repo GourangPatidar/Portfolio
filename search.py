@@ -1,5 +1,6 @@
 import streamlit as st
 from serpapi import GoogleSearch
+from urllib.parse import urlparse
 
 # Fetch search results from SerpApi
 def fetch_search_results(query):
@@ -20,7 +21,7 @@ def fetch_search_results(query):
 st.title("Google Search Results")
 
 # Input field for search query
-query = st.text_input("Search Query", "who is rohit sharma")
+query = st.text_input("Search Query")
 
 if st.button("Search"):
     if query:
@@ -32,12 +33,18 @@ if st.button("Search"):
             best_result = search_results[0]  # Assuming the first result is the most relevant
             st.header("Best Content")
             st.subheader(best_result.get('title', 'No Title'))
-            st.write(best_result.get('snippet', 'No Snippet'))
+            
+            # Combine snippets from multiple top results to increase content length
+            combined_snippet = ""
+            for result in search_results[:3]:  # Combining snippets from the top 3 results
+                combined_snippet += result.get('snippet', '') + " "
+                
+            st.write(combined_snippet.strip())
             st.write(f"[Read more]({best_result.get('link', '#')})")
 
             # Show High Quality Images in a 4x4 grid
             st.header("Images")
-            image_urls = [result.get('thumbnail') for result in search_results if 'thumbnail' in result]
+            image_urls = [(result.get('thumbnail'), result.get('link')) for result in search_results if 'thumbnail' in result]
             
             if image_urls:
                 num_images_per_row = 4
@@ -48,17 +55,19 @@ if st.button("Search"):
                     for i in range(num_images_per_row):
                         index = row * num_images_per_row + i
                         if index < len(image_urls):
-                            cols[i].image(image_urls[index], use_column_width=True)
+                            image_url, link = image_urls[index]
+                            cols[i].markdown(f'<a href="{link}" target="_blank"><img src="{image_url}" style="width:100%;"></a>', unsafe_allow_html=True)
             else:
                 st.write("No images available.")
 
-            # Show Referral Links with Titles
+            # Show Referral Links with Titles and Domain Names
             st.header("Referral Links")
             for result in search_results:
                 title = result.get('title', 'No Title')
                 referral_link = result.get('link', None)
                 if referral_link:
-                    st.write(f"[{title}]({referral_link})")
+                    domain = urlparse(referral_link).netloc
+                    st.write(f"[{title}]({referral_link}) - {domain}")
         else:
             st.write("No results found.")
     else:
