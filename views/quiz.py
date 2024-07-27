@@ -183,6 +183,8 @@ if st.button("Generate Quiz"):
         try:
             raw_response = llm_chain.run(inputs)
         
+            # Debugging output: print raw response
+            st.write("Raw response:", raw_response)
 
             # Attempt to parse JSON
             data = json.loads(raw_response)
