@@ -8,7 +8,6 @@ from youtube_transcript_api import YouTubeTranscriptApi
 from bs4 import BeautifulSoup
 import requests
 
-
 # Load OpenAI API key from Streamlit secrets
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 
@@ -71,14 +70,13 @@ def get_video_transcript(video_id):
         print(f"Error fetching transcript: {str(e)}")
         return None
 
-
 # Initialize OpenAI language model
-llm = ChatOpenAI(api_key=OPENAI_API_KEY )
+llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-4o-mini")
 
 # Define the prompt template for generating quiz questions
 template = """
 Using the following JSON schema,
-Please list {num_questions} quiz questions in {language} on {subject} for {schooling_level} and difficulty level of the quiz should be {level} and of type {question_type} .
+Please list {num_questions} quiz questions in {language} on {subject} for {schooling_level} and difficulty level of the quiz should be {level} and of type {question_type}.
 Make sure to return the data in JSON format exactly matching this schema.
 Recipe = {{
     "question": "str",
@@ -86,7 +84,7 @@ Recipe = {{
     "answer": "str",
     "type": "str",  # Add a type field for indicating question type (multiple_choice / true_false / numeric / etc.)
     "explanation": "str"  # Add an explanation for the answer
-}} 
+}}
 Return: list[Recipe]
 
 example:
@@ -193,6 +191,10 @@ if st.button("Generate Quiz"):
                 data = json.loads(json_response)
             else:
                 raise ValueError("No JSON part found in response")
+
+            # Check if the number of questions generated is less than requested
+            if len(data) < num_questions:
+                st.warning(f"Only {len(data)} questions were generated. You may want to adjust the parameters.")
 
             # Filter questions based on selected type before saving to session_state
             filtered_questions = []
