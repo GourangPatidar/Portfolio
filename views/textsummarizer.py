@@ -4,6 +4,11 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.chains.summarize import load_summarize_chain
 
+
+css_file = "./styles/paper_css.css"
+with open(css_file) as f:
+    st.markdown("<style>{}</style>".format(f.read()), unsafe_allow_html=True)
+
 openai_api_key=st.secrets["OPENAI_API_KEY"]
 def generate_response(txt):
     # Instantiate the LLM model

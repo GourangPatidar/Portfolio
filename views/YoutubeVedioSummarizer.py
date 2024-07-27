@@ -7,6 +7,11 @@ import google.generativeai as genai
 
 from youtube_transcript_api import YouTubeTranscriptApi
 
+
+css_file = "./styles/paper_css.css"
+with open(css_file) as f:
+    st.markdown("<style>{}</style>".format(f.read()), unsafe_allow_html=True)
+
 # Configure Google Generative AI API
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))  # Use os.getenv for environment variables
 
