@@ -1,9 +1,9 @@
 import json
-import streamlit as st
 from langchain.llms import OpenAI as LangChainOpenAI
 from langchain_openai import ChatOpenAI
 from langchain import LLMChain, PromptTemplate
 from PyPDF2 import PdfReader
+import streamlit as st
 from youtube_transcript_api import YouTubeTranscriptApi
 from bs4 import BeautifulSoup
 import requests
@@ -48,13 +48,11 @@ def extract_video_id(url):
         video_id_index = url.index('youtu.be/') + len('youtu.be/')
         video_id = url[video_id_index:]
         return video_id
-    
     # Check if the URL contains 'watch?v=' format
     elif 'watch?v=' in url:
         video_id_index = url.index('watch?v=') + len('watch?v=')
         video_id = url[video_id_index:]
         return video_id
-    
     # If the URL format is not recognized
     else:
         return None
@@ -65,7 +63,7 @@ def get_video_transcript(video_id):
         transcript_text = ' '.join([entry['text'] for entry in transcript])
         return transcript_text
     except Exception as e:
-        st.error(f"Error fetching transcript: {str(e)}")
+        print(f"Error fetching transcript: {str(e)}")
         return None
 
 # Initialize OpenAI language model
@@ -74,7 +72,7 @@ llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-4o-mini")
 # Define the prompt template for generating quiz questions
 template = """
 Using the following JSON schema,
-Please list {num_questions} quiz questions in {language} on {subject} for {schooling_level} and difficulty level of the quiz should be {level} and of type {question_type} .
+Please list {num_questions} quiz questions in {language} on {subject} for {schooling_level} and difficulty level of the quiz should be {level} and of type {question_type}.
 Make sure to return the data in JSON format exactly matching this schema.
 Recipe = {{
     "question": "str",
@@ -82,7 +80,7 @@ Recipe = {{
     "answer": "str",
     "type": "str",  # Add a type field for indicating question type (multiple_choice / true_false / numeric / etc.)
     "explanation": "str"  # Add an explanation for the answer
-}} 
+}}
 Return: list[Recipe]
 
 example:
@@ -95,12 +93,13 @@ example:
         "explanation": "The Pacific Ocean is the largest and deepest ocean on Earth."
     }},
     {{
-        "question": "J.K. Rowling is the author of the Harry Potter series.",
+        "question": " J.K. Rowling is the author of the Harry Potter series.",
         "options": ["True", "False"],
         "answer": "True",
         "type": "true_false",
         "explanation": "J.K. Rowling is indeed the author of the Harry Potter series."
     }},
+    
 ]
 """
 
@@ -109,7 +108,7 @@ llm_chain = LLMChain(llm=llm, prompt=PromptTemplate(input_variables=["num_questi
 
 # Streamlit app setup
 st.title("Quiz Generator")
-subject = ""
+subject=""
 
 # User inputs
 input_type = st.selectbox("Input Type", ["Text", "PDF", "Blog URL", "Video URL"])
@@ -136,7 +135,7 @@ elif input_type == "Blog URL":
             st.write(subject)
         else:
             st.warning("Please enter a valid URL.")
-elif input_type == "Video URL":
+elif input_type=="Video URL":
     url = st.text_input(f"Enter {input_type} URL")
 
     if st.button("Fetch Content"):
@@ -175,34 +174,37 @@ if st.button("Generate Quiz"):
 
         # Generate the quiz using LangChain
         try:
-            # Check token length here if possible
             raw_response = llm_chain.run(inputs)
-            
-            # Log or display the raw response for debugging
-            st.write("Raw response from API:", raw_response)
-            
-            # Attempt to parse JSON
-            try:
-                data = json.loads(raw_response)
-                
-                # Filter questions based on selected type before saving to session_state
-                filtered_questions = []
-                for question in data:
-                    if type_filter == "both" or question["type"] == type_filter:
-                        filtered_questions.append(question)
+        
+            # Debugging output: print raw response
+            st.write("Raw response:", raw_response)
 
-                if len(filtered_questions) < num_questions:
-                    st.warning(f"Only {len(filtered_questions)} questions were generated. Consider changing your parameters.")
-                    
-                st.session_state.questions = filtered_questions
-                st.success("Quiz generated successfully!")
-            except json.JSONDecodeError as e:
-                st.error("Error decoding JSON from response. Please check your input parameters.")
-        except Exception as e:
-            if "maximum context length" in str(e).lower():
-                st.warning("The input content might be too long. Please try with shorter content or fewer questions.")
+            # Extract JSON part from response
+            json_start_idx = raw_response.find("[")
+            json_end_idx = raw_response.rfind("]")
+            if json_start_idx != -1 and json_end_idx != -1:
+                json_response = raw_response[json_start_idx:json_end_idx + 1]
+                data = json.loads(json_response)
             else:
-                st.error(f"An unexpected error occurred: {str(e)}")
+                raise ValueError("No JSON part found in response")
+
+            # Check if the number of questions generated is less than requested
+            if len(data) < num_questions:
+                st.warning(f"Only {len(data)} questions were generated. You may want to adjust the parameters.")
+
+            # Filter questions based on selected type before saving to session_state
+            filtered_questions = []
+            for question in data:
+                if type_filter == "both" or question["type"] == type_filter:
+                    filtered_questions.append(question)
+
+            st.session_state.questions = filtered_questions
+            st.success("Quiz generated successfully!")
+        except json.JSONDecodeError as e:
+            st.error(f"Error decoding JSON from response: {e}")
+            st.error(f"Raw response: {raw_response}")
+        except Exception as e:
+            st.error(f"An unexpected error occurred: {str(e)}")
     else:
         st.warning("Please provide content (text, PDF, blog URL, or video URL) before generating the quiz.")
 
