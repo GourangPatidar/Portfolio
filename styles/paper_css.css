@@ -31,8 +31,6 @@ h1 {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    border: 2px dashed #007bff;
-    border-radius: 10px;
     padding: 2rem;
     background-color: #e9ecef;
     cursor: pointer;
@@ -78,16 +76,7 @@ button:hover {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* Styling for the output area */
-.stMarkdown {
-    background-color: #e8f5e9;
-    border-left: 5px solid #66bb6a;
-    padding: 1rem;
-    border-radius: 5px;
-    margin-top: 1.5rem;
-    font-size: 1rem;
-    color: #2e7d32;
-}
+
 
 /* Styling for the footer */
 footer {
