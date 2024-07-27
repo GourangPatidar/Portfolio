@@ -73,7 +73,7 @@ def get_video_transcript(video_id):
 
 
 # Initialize OpenAI language model
-llm = ChatOpenAI(api_key=OPENAI_API_KEY , model="text-embedding-3-large")
+llm = ChatOpenAI(api_key=OPENAI_API_KEY , model="gpt-4o-mini")
 
 # Define the prompt template for generating quiz questions
 template = """
