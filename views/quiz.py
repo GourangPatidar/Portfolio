@@ -220,7 +220,7 @@ if 'questions' in st.session_state:
         if question['type'] == "single_select":
             options = question['options']
             user_answers[idx] = st.radio(f"Select an answer for Q{idx}:", options)
-        elif question['type'] == "true_false":
+        elif question['type'] == "true/false":
             options = ["True", "False"]
             user_answers[idx] = st.radio(f"Select True or False for Q{idx}:", options)
         elif question['type'] == "numeric":
