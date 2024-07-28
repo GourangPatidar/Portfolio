@@ -37,7 +37,7 @@ def extract_text_from_blog_url(url):
         soup = BeautifulSoup(response.content, 'html.parser')
         paragraphs = soup.find_all('p')
         text = '\n'.join([p.get_text() for p in paragraphs])
-        text = text[50:-200]
+        text=text[50:-200]
     else:
         text = ""  # Handle other types of URLs as needed
     return text
@@ -72,14 +72,14 @@ llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-4o-mini")
 # Define the prompt template for generating quiz questions
 template = """
 Using the following JSON schema,
-Please list {num_questions} quiz questions in {language} on {subject} for {schooling_level} and difficulty level of the quiz should be {level} and of type {question_type}.
-cover all of the topics given of the content while making questions
+Please list {num_questions} quiz questions in {language} on {subject} for {schooling_level} and difficulty level of the quiz should be {level}.
+Cover all of the topics given in the content while making questions.
 Make sure to return the data in JSON format exactly matching this schema.
 Recipe = {{
     "question": "str",
-    "options": "list",  # Only for multiple_choice type
+    "options": "list",
     "answer": "str",
-    "type": "str",  # multiple_choice / true_false / numeric / theory
+    "type": "str",  # Indicating question type (multiple_choice / true_false / numeric / theory)
     "explanation": "str"  # Add an explanation for the answer
 }}
 Return: list[Recipe]
@@ -94,33 +94,35 @@ example:
         "explanation": "The Pacific Ocean is the largest and deepest ocean on Earth."
     }},
     {{
-        "question": "J.K. Rowling is the author of the Harry Potter series.",
+        "question": " J.K. Rowling is the author of the Harry Potter series.",
         "options": ["True", "False"],
         "answer": "True",
         "type": "true_false",
         "explanation": "J.K. Rowling is indeed the author of the Harry Potter series."
     }},
     {{
-        "question": "What is the value of pi to two decimal places?",
-        "answer": "3.14",
+        "question": "What is 5 + 3?",
+        "options": [],
+        "answer": "8",
         "type": "numeric",
-        "explanation": "Pi is approximately equal to 3.14."
+        "explanation": "The sum of 5 and 3 is 8."
     }},
     {{
         "question": "Explain the theory of relativity.",
-        "answer": "The theory of relativity usually encompasses two interrelated theories by Albert Einstein: special relativity and general relativity.",
+        "options": [],
+        "answer": "The theory of relativity is a scientific concept describing the relationship between space, time, and gravity.",
         "type": "theory",
-        "explanation": "Special relativity applies to elementary particles and their interactions, describing all their physical phenomena except gravity. General relativity explains the law of gravitation and its relation to other forces of nature."
+        "explanation": "Einstein's theory of relativity includes both the special relativity and general relativity principles."
     }}
 ]
 """
 
 # Initialize LangChain LLMChain with the prompt template
-llm_chain = LLMChain(llm=llm, prompt=PromptTemplate(input_variables=["num_questions", "language", "subject", "schooling_level", "level", "question_type"], template=template))
+llm_chain = LLMChain(llm=llm, prompt=PromptTemplate(input_variables=["num_questions", "language", "subject", "schooling_level", "level"], template=template))
 
 # Streamlit app setup
 st.title("Quiz Generator")
-subject = ""
+subject=""
 
 # User inputs
 input_type = st.selectbox("Input Type", ["Text", "PDF", "Blog URL", "Video URL"])
@@ -145,20 +147,16 @@ elif input_type == "Blog URL":
         st.warning("please provide a valid url")
     
     subject = extract_text_from_blog_url(url)
-
-elif input_type == "Video URL":
+elif input_type == "Video URL" :
     url = st.text_input(f"Enter {input_type} URL")
     video_id = extract_video_id(url)
     subject = get_video_transcript(video_id)
+
 
 schooling_level = st.selectbox("Schooling Level", ["Primary", "Secondary", "High School", "College", "University"])
 num_questions = st.number_input("Number of Questions", min_value=1, max_value=20, step=1)
 level = st.selectbox("Difficulty Level", ["Easy", "Medium", "Hard", "Expert"])
 language = st.selectbox("Language", ["English", "Spanish", "French", "German", "Chinese", "Hindi"])
-question_type = st.selectbox("Question Type", ["Multiple Choice", "True/False", "Numeric", "Theory", "All"])
-
-# Mapping question type selection to LangChain template input
-type_filter = question_type.lower()
 
 if st.button("Generate Quiz"):
     # Ensure subject is not empty before generating the quiz
@@ -169,8 +167,7 @@ if st.button("Generate Quiz"):
             "language": language,
             "subject": subject,
             "schooling_level": schooling_level,
-            "level": level,
-            "question_type": type_filter  # Pass the selected question type to LangChain
+            "level": level
         }
 
         # Generate the quiz using LangChain
@@ -178,12 +175,12 @@ if st.button("Generate Quiz"):
             raw_response = llm_chain.run(inputs)
         
             # Debugging output: print raw response
-            # print(raw_response)
+            
 
             # Extract JSON part from response
             json_start_idx = raw_response.find("[")
             json_end_idx = raw_response.rfind("]")
-            if (json_start_idx != -1) and (json_end_idx != -1):
+            if json_start_idx != -1 and json_end_idx != -1:
                 json_response = raw_response[json_start_idx:json_end_idx + 1]
                 data = json.loads(json_response)
             else:
@@ -194,12 +191,7 @@ if st.button("Generate Quiz"):
                 st.warning(f"Only {len(data)} questions were generated. You may want to adjust the parameters.")
 
             # Filter questions based on selected type before saving to session_state
-            filtered_questions = []
-            for question in data:
-                if type_filter == "all" or question["type"] == type_filter:
-                    filtered_questions.append(question)
-
-            st.session_state.questions = filtered_questions
+            st.session_state.questions = data
             st.success("Quiz generated successfully!")
         except json.JSONDecodeError as e:
             st.error(f"Error decoding JSON from response: {e}")
