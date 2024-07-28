@@ -145,7 +145,7 @@ else :
     if st.button("Fetch Content"):
         if url:
             video_id = extract_video_id(url)
-            subject = get_video_transcript(video_id)
+            subject = get_video_transcript(video_id).strip()
             st.write(subject)
             st.write("done")
         else:
