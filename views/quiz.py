@@ -235,7 +235,7 @@ if 'questions' in st.session_state:
             user_answer = user_answers.get(idx)
 
             if question['type'] == 'theory':
-                is_correct = correct_answer.lower() in user_answer.lower() if user_answer else False
+                is_correct = None
             else:
                 is_correct = user_answer == correct_answer
             
@@ -259,8 +259,9 @@ if 'questions' in st.session_state:
             st.write(f"Explanation: {result['explanation']}" if result['explanation'] else "No explanation provided.")
             if result['type'] != 'theory':
                 st.write("Correct!" if result['is_correct'] else "Incorrect.")
-            else:
-                st.write("Correct!" if result['is_correct'] else "Incorrect.")
             st.write("---")
 
-        st.write(f"Your score: {score} out of {len(st.session_state.questions)}")
+        # Display score only if there are non-theory questions
+        non_theory_questions = [q for q in results if q['type'] != 'theory']
+        if non_theory_questions:
+            st.write(f"Your score: {score} out of {len(non_theory_questions)}")
