@@ -139,7 +139,7 @@ elif input_type == "Blog URL":
             st.write(subject)
         else:
             st.warning("Please enter a valid URL.")
-elif input_type=="Video URL":
+else :
     url = st.text_input(f"Enter {input_type} URL")
 
     if st.button("Fetch Content"):
