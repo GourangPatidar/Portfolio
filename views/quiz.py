@@ -120,7 +120,7 @@ llm_chain = LLMChain(llm=llm, prompt=PromptTemplate(input_variables=["num_questi
 
 # Streamlit app setup
 st.title("Quiz Generator")
-subject=""
+subject = ""
 
 # User inputs
 input_type = st.selectbox("Input Type", ["Text", "PDF", "Blog URL", "Video URL"])
@@ -145,11 +145,11 @@ elif input_type == "Blog URL":
         st.warning("please provide a valid url")
     
     subject = extract_text_from_blog_url(url)
-elif input_type == "Video URL" :
+
+elif input_type == "Video URL":
     url = st.text_input(f"Enter {input_type} URL")
     video_id = extract_video_id(url)
     subject = get_video_transcript(video_id)
-
 
 schooling_level = st.selectbox("Schooling Level", ["Primary", "Secondary", "High School", "College", "University"])
 num_questions = st.number_input("Number of Questions", min_value=1, max_value=20, step=1)
@@ -183,7 +183,7 @@ if st.button("Generate Quiz"):
             # Extract JSON part from response
             json_start_idx = raw_response.find("[")
             json_end_idx = raw_response.rfind("]")
-            if json_start_idx != -1 and json_end_idx != -1:
+            if (json_start_idx != -1) and (json_end_idx != -1):
                 json_response = raw_response[json_start_idx:json_end_idx + 1]
                 data = json.loads(json_response)
             else:
@@ -241,7 +241,8 @@ if 'questions' in st.session_state:
                 'correct_answer': correct_answer,
                 'user_answer': user_answer,
                 'is_correct': is_correct,
-                'explanation': question['explanation'] if 'explanation' in question else None
+                'explanation': question['explanation'] if 'explanation' in question else None,
+                'type': question['type']
             })
 
         st.header("Results")
@@ -255,4 +256,3 @@ if 'questions' in st.session_state:
             st.write("---")
 
         st.write(f"Your score: {score} out of {len(st.session_state.questions)}")
-
