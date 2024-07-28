@@ -8,10 +8,6 @@ from langchain import LLMChain, PromptTemplate
 from youtube_transcript_api import YouTubeTranscriptApi
 from bs4 import BeautifulSoup
 
-css_file = "./styles/main.css"
-with open(css_file) as f:
-    st.markdown("<style>{}</style>".format(f.read()), unsafe_allow_html=True)
-
 # Load OpenAI API key from Streamlit secrets
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 
@@ -36,24 +32,21 @@ def extract_text_from_blog_url(url):
         response = requests.get(url)
         soup = BeautifulSoup(response.content, 'html.parser')
         paragraphs = soup.find_all('p')
-        text = '\n'.join([p.get_text() for p in paragraphs])
+        text = '\n.join([p.get_text() for p in paragraphs])
         text = text[50:-200]
     else:
         text = ""  # Handle other types of URLs as needed
     return text
 
 def extract_video_id(url):
-    # Check if the URL contains 'youtu.be/' format
     if 'youtu.be/' in url:
         video_id_index = url.index('youtu.be/') + len('youtu.be/')
         video_id = url[video_id_index:]
         return video_id
-    # Check if the URL contains 'watch?v=' format
     elif 'watch?v=' in url:
         video_id_index = url.index('watch?v=') + len('watch?v=')
         video_id = url[video_id_index:]
         return video_id
-    # If the URL format is not recognized
     else:
         return None
 
@@ -63,11 +56,11 @@ def get_video_transcript(video_id):
         transcript_text = ' '.join([entry['text'] for entry in transcript])
         return transcript_text
     except Exception as e:
-        print(f"Error fetching transcript: {str(e)}")
+        st.error(f"Error fetching transcript: {str(e)}")
         return None
 
 # Initialize OpenAI language model
-llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-4o-mini")
+llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-4")
 
 # Define the prompt template for generating quiz questions
 template = """
@@ -130,83 +123,68 @@ llm_chain = LLMChain(llm=llm, prompt=PromptTemplate(input_variables=["num_questi
 
 # Streamlit app setup
 st.title("Quiz Generator")
-subject = ""
 
 # User inputs
 input_type = st.selectbox("Input Type", ["Text", "PDF", "Blog URL", "Video URL"])
 
+subject = ""
 if input_type == "PDF":
     uploaded_files = st.file_uploader("Upload PDF file(s)", type=["pdf"], accept_multiple_files=True)
-    
-    pdf_text = ""
     if uploaded_files:
         for file in uploaded_files:
-            pdf_text += get_pdf_text(file)
-    subject = pdf_text.strip()
-
+            subject += get_pdf_text(file)
 elif input_type == "Text":
     input_text = st.text_area("Enter Text")
     subject = input_text.strip()
-
 elif input_type == "Blog URL":
-    try:
-        url = st.text_input(f"Enter {input_type} URL")
-    except:
-        st.warning("please provide a valid url")
-    
-    subject = extract_text_from_blog_url(url)
+    url = st.text_input("Enter Blog URL")
+    if url:
+        subject = extract_text_from_blog_url(url)
 elif input_type == "Video URL":
-    url = st.text_input(f"Enter {input_type} URL")
-    video_id = extract_video_id(url)
-    subject = get_video_transcript(video_id)
+    url = st.text_input("Enter Video URL")
+    if url:
+        video_id = extract_video_id(url)
+        if video_id:
+            subject = get_video_transcript(video_id)
 
 schooling_level = st.selectbox("Schooling Level", ["Primary", "Secondary", "High School", "College", "University"])
 num_questions = st.number_input("Number of Questions", min_value=1, max_value=20, step=1)
 level = st.selectbox("Difficulty Level", ["Easy", "Medium", "Hard", "Expert"])
 language = st.selectbox("Language", ["English", "Spanish", "French", "German", "Chinese", "Hindi"])
-
 question_types = st.multiselect("Question Types", ["multiple_choice", "true_false", "numeric", "theory", "multiple_select"], default=["multiple_choice", "true_false", "numeric", "theory"])
 
+def split_text_into_chunks(text, max_length=2000):
+    words = text.split()
+    chunks = []
+    current_chunk = []
+    for word in words:
+        if len(" ".join(current_chunk + [word])) > max_length:
+            chunks.append(" ".join(current_chunk))
+            current_chunk = [word]
+        else:
+            current_chunk.append(word)
+    if current_chunk:
+        chunks.append(" ".join(current_chunk))
+    return chunks
+
 if st.button("Generate Quiz"):
-    # Ensure subject is not empty before generating the quiz
     if subject:
-        def split_text_into_chunks(text, max_length=2000):
-            """Split text into smaller chunks of a specified maximum length."""
-            words = text.split()
-            chunks = []
-            current_chunk = []
-
-            for word in words:
-                if len(" ".join(current_chunk + [word])) > max_length:
-                    chunks.append(" ".join(current_chunk))
-                    current_chunk = [word]
-                else:
-                    current_chunk.append(word)
-            
-            if current_chunk:
-                chunks.append(" ".join(current_chunk))
-
-            return chunks
-
         chunks = split_text_into_chunks(subject)
-
         all_questions = []
-        for chunk in chunks:
-            # Generate the prompt inputs for each chunk
+        progress_bar = st.progress(0)
+
+        for i, chunk in enumerate(chunks):
+            progress_bar.progress((i + 1) / len(chunks))
             inputs = {
-                "num_questions": num_questions,
+                "num_questions": min(num_questions, 5),  # Limiting the number of questions per chunk
                 "language": language,
                 "subject": chunk,
                 "schooling_level": schooling_level,
                 "level": level,
                 "question_types": ", ".join(question_types)
             }
-
-            # Generate the quiz using LangChain
             try:
                 raw_response = llm_chain.run(inputs)
-
-                # Extract JSON part from response
                 json_start_idx = raw_response.find("[")
                 json_end_idx = raw_response.rfind("]")
                 if json_start_idx != -1 and json_end_idx != -1:
@@ -221,16 +199,10 @@ if st.button("Generate Quiz"):
             except Exception as e:
                 st.error(f"An unexpected error occurred: {str(e)}")
 
-        # Check if the number of questions generated is less than requested
-        if len(all_questions) < num_questions:
-            st.warning(f"Only {len(all_questions)} questions were generated, which is less than the requested {num_questions} questions.")
-
-        # Store questions in session state
         st.session_state.questions = all_questions
 
         st.header("Generated Quiz")
         user_answers = {}
-
         for idx, question in enumerate(st.session_state.questions, start=1):
             st.write(f"Q{idx}: {question['question']}")
             if question['type'] == "multiple_choice":
@@ -240,9 +212,9 @@ if st.button("Generate Quiz"):
                 options = ["True", "False"]
                 user_answers[idx] = st.radio(f"Select True or False for Q{idx}:", options)
             elif question['type'] == "numeric":
-                user_answers[idx] = st.number_input(f"Enter a number for Q{idx}:", value=0)
+                user_answers[idx] = st.number_input(f"Enter a numeric answer for Q{idx}:", step=1)
             elif question['type'] == "theory":
-                user_answers[idx] = st.text_area(f"Write your answer for Q{idx}:")
+                user_answers[idx] = st.text_area(f"Enter your answer for Q{idx}:")
             elif question['type'] == "multiple_select":
                 options = question['options']
                 user_answers[idx] = st.multiselect(f"Select one or more answers for Q{idx}:", options)
@@ -253,17 +225,14 @@ if st.button("Generate Quiz"):
             for idx, question in enumerate(st.session_state.questions, start=1):
                 correct_answer = question['answer']
                 user_answer = user_answers.get(idx)
-
                 if question['type'] == 'theory':
                     is_correct = None
                 elif question['type'] == 'multiple_select':
                     is_correct = set(user_answer) == set(correct_answer)
                 else:
                     is_correct = user_answer == correct_answer
-
                 if is_correct:
                     score += 1
-
                 results.append({
                     'question': question['question'],
                     'correct_answer': correct_answer,
@@ -283,10 +252,8 @@ if st.button("Generate Quiz"):
                     st.write("Correct!" if result['is_correct'] else "Incorrect.")
                 st.write("---")
 
-            # Display score only if there are non-theory questions
             non_theory_questions = [q for q in results if q['type'] != 'theory']
             if non_theory_questions:
                 st.write(f"Your score: {score} out of {len(non_theory_questions)}")
-
     else:
         st.warning("Please provide content for the quiz generation.")
