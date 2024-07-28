@@ -39,12 +39,7 @@ def extract_text_from_blog_url(url):
         text = '\n'.join([p.get_text() for p in paragraphs])
         text=text[50:-200]
     else:
-        url="https://www."+url
-        response = requests.get(url)
-        soup = BeautifulSoup(response.content, 'html.parser')
-        paragraphs = soup.find_all('p')
-        text = '\n'.join([p.get_text() for p in paragraphs])
-        text=text[50:-200] # Handle other types of URLs as needed
+        text = ""  # Handle other types of URLs as needed
     return text
 
 def extract_video_id(url):
@@ -136,7 +131,7 @@ elif input_type == "Blog URL":
     try:
         url = st.text_input(f"Enter {input_type} URL")
     except:
-        st.warning("please provide a valid url starting with ")
+        st.warning("please provide a valid url ")
         pass
     subject = extract_text_from_blog_url(url)
 elif input_type == "Video URL" :
