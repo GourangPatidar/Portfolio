@@ -43,7 +43,7 @@ def extract_text_from_url(url):
         soup = BeautifulSoup(response.content, 'html.parser')
         paragraphs = soup.find_all('p')
         text = '\n'.join([p.get_text() for p in paragraphs])
-        text=text[20:-20]
+        text=text[50:-50]
     else:
         text = ""  # Handle other types of URLs as needed
     return text
