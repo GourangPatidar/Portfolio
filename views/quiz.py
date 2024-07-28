@@ -233,9 +233,15 @@ if 'questions' in st.session_state:
         for idx, question in enumerate(st.session_state.questions, start=1):
             correct_answer = question['answer']
             user_answer = user_answers.get(idx)
-            is_correct = user_answer == correct_answer if question['type'] != 'theory' else False
+
+            if question['type'] == 'theory':
+                is_correct = correct_answer.lower() in user_answer.lower() if user_answer else False
+            else:
+                is_correct = user_answer == correct_answer
+            
             if is_correct:
                 score += 1
+
             results.append({
                 'question': question['question'],
                 'correct_answer': correct_answer,
