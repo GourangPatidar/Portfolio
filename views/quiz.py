@@ -134,7 +134,7 @@ elif input_type == "Text":
 elif input_type == "Blog URL":
     url = st.text_input(f"Enter {input_type} URL")
     
-    subject = extract_text_from_url(url).strip()
+    subject = extract_text_from_url(url)
     st.write(subject)
 else :
     url = st.text_input(f"Enter {input_type} URL")
