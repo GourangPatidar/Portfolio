@@ -146,6 +146,8 @@ else :
         if url:
             video_id = extract_video_id(url)
             subject = get_video_transcript(video_id)
+            st.write(subject)
+            st.write("done")
         else:
             st.warning("Please enter a valid URL.")
 
