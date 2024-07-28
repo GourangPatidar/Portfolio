@@ -169,51 +169,52 @@ language = st.selectbox("Language", ["English", "Spanish", "French", "German", "
 question_types = st.multiselect("Question Types", ["single_select", "true_false", "numeric", "theory", "multiple_select"], default=["single_select"])
 
 if st.button("Generate Quiz"):
-    # Ensure subject is not empty before generating the quiz
-    if subject:
-        # Generate the prompt inputs
-        inputs = {
-            "num_questions": num_questions,
-            "language": language,
-            "subject": subject,
-            "schooling_level": schooling_level,
-            "level": level,
-            "question_types": ", ".join(question_types)
-        }
+    with st.spinner("Generating quiz..."):
+        # Ensure subject is not empty before generating the quiz
+        if subject:
+            # Generate the prompt inputs
+            inputs = {
+                "num_questions": num_questions,
+                "language": language,
+                "subject": subject,
+                "schooling_level": schooling_level,
+                "level": level,
+                "question_types": ", ".join(question_types)
+            }
 
-        # Generate the quiz using LangChain
-        try:
-            raw_response = llm_chain.run(inputs)
-        
-            # Debugging output: print raw response
+            # Generate the quiz using LangChain
+            try:
+                raw_response = llm_chain.run(inputs)
             
+                # Debugging output: print raw response
+                
 
-            # Extract JSON part from response
-            json_start_idx = raw_response.find("[")
-            json_end_idx = raw_response.rfind("]")
-            if (json_start_idx != -1 and json_end_idx != -1):
-                json_response = raw_response[json_start_idx:json_end_idx + 1]
-                data = json.loads(json_response)
-            else:
-                raise ValueError("No JSON part found in response")
+                # Extract JSON part from response
+                json_start_idx = raw_response.find("[")
+                json_end_idx = raw_response.rfind("]")
+                if (json_start_idx != -1 and json_end_idx != -1):
+                    json_response = raw_response[json_start_idx:json_end_idx + 1]
+                    data = json.loads(json_response)
+                else:
+                    raise ValueError("No JSON part found in response")
 
-            # Check if the number of questions generated is less than requested
-            if len(data) < num_questions:
-                st.warning(f"Only {len(data)} questions were generated. You may want to adjust the parameters.")
+                # Check if the number of questions generated is less than requested
+                if len(data) < num_questions:
+                    st.warning(f"Only {len(data)} questions were generated. You may want to adjust the parameters.")
 
-            # Filter questions based on selected type before saving to session_state
-            sorted_data = []
-            for qtype in question_types:
-                sorted_data.extend([q for q in data if q['type'] == qtype])
-            st.session_state.questions = sorted_data
-            st.success("Quiz generated successfully!")
-        except json.JSONDecodeError as e:
-            st.error(f"Error decoding JSON from response: {e}")
-            st.error(f"Raw response: {raw_response}")
-        except Exception as e:
-            st.error(f"An unexpected error occurred: {str(e)}")
-    else:
-        st.warning("Please provide content (text, PDF, blog URL, or video URL) before generating the quiz.")
+                # Filter questions based on selected type before saving to session_state
+                sorted_data = []
+                for qtype in question_types:
+                    sorted_data.extend([q for q in data if q['type'] == qtype])
+                st.session_state.questions = sorted_data
+                st.success("Quiz generated successfully!")
+            except json.JSONDecodeError as e:
+                st.error(f"Error decoding JSON from response: {e}")
+                st.error(f"Raw response: {raw_response}")
+            except Exception as e:
+                st.error(f"An unexpected error occurred: {str(e)}")
+        else:
+            st.warning("Please provide content (text, PDF, blog URL, or video URL) before generating the quiz.")
 
 if 'questions' in st.session_state:
     st.header("Quiz")
@@ -236,84 +237,85 @@ if 'questions' in st.session_state:
             user_answers[idx] = st.text_area(f"Write your answer for Q{idx}:")
 
     if st.button("Submit Quiz"):
-        # Generate quiz results
-        correct_answers = 0
-        results = []
+        with st.spinner("Grading quiz..."):
+            # Generate quiz results
+            correct_answers = 0
+            results = []
 
-        for idx, question in enumerate(st.session_state.questions, start=1):
-            correct_answer = question['answer']
-            user_answer = user_answers.get(idx)
+            for idx, question in enumerate(st.session_state.questions, start=1):
+                correct_answer = question['answer']
+                user_answer = user_answers.get(idx)
 
-            if isinstance(correct_answer, list):
-                correct = set(user_answer) == set(correct_answer)
-            else:
-                correct = user_answer == correct_answer
+                if isinstance(correct_answer, list):
+                    correct = set(user_answer) == set(correct_answer)
+                else:
+                    correct = user_answer == correct_answer
 
-            result = {
-                "question": question['question'],
-                "user_answer": user_answer,
-                "correct_answer": correct_answer,
-                "explanation": question['explanation'],
-                "correct": correct
-            }
-            results.append(result)
+                result = {
+                    "question": question['question'],
+                    "user_answer": user_answer,
+                    "correct_answer": correct_answer,
+                    "explanation": question['explanation'],
+                    "correct": correct
+                }
+                results.append(result)
 
-            if correct:
-                correct_answers += 1
+                if correct:
+                    correct_answers += 1
 
-        score = (correct_answers / len(st.session_state.questions)) * 100
-        st.success(f"You scored {score}%")
+            score = (correct_answers / len(st.session_state.questions)) * 100
+            st.success(f"You scored {score}%")
 
-        # Display results with correct answers, explanations, user answers, and correct/incorrect status
-        st.header("Results")
-        for result in results:
-            st.write(f"**Question:** {result['question']}")
-            st.write(f"**Your Answer:** {result['user_answer']}")
-            st.write(f"**Correct Answer:** {result['correct_answer']}")
-            st.write(f"**Explanation:** {result['explanation']}")
-            st.write(f"**Status:** {'Correct' if result['correct'] else 'Incorrect'}")
-            st.write("---")
+            # Display results with correct answers, explanations, user answers, and correct/incorrect status
+            st.header("Results")
+            for result in results:
+                st.write(f"**Question:** {result['question']}")
+                st.write(f"**Your Answer:** {result['user_answer']}")
+                st.write(f"**Correct Answer:** {result['correct_answer']}")
+                st.write(f"**Explanation:** {result['explanation']}")
+                st.write(f"**Status:** {'Correct' if result['correct'] else 'Incorrect'}")
+                st.write("---")
 
-        # Generate PDF with questions
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", size=12)
-        pdf.cell(200, 10, txt="Quiz Questions", ln=True, align="C")
+            # Generate PDF with questions
+            pdf = FPDF()
+            pdf.add_page()
+            pdf.set_font("Arial", size=12)
+            pdf.cell(200, 10, txt="Quiz Questions", ln=True, align="C")
 
-        for idx, question in enumerate(st.session_state.questions, start=1):
-            pdf.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
-            if question['type'] in ["single_select", "multiple_select", "true/false"]:
-                for option in question['options']:
-                    pdf.cell(0, 10, txt=f"- {option}", ln=True)
-            pdf.cell(0, 10, txt="", ln=True)  # Add an empty line between questions
+            for idx, question in enumerate(st.session_state.questions, start=1):
+                pdf.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
+                if question['type'] in ["single_select", "multiple_select", "true_false"]:
+                    for option in question['options']:
+                        pdf.cell(0, 10, txt=f"- {option}", ln=True)
+                pdf.cell(0, 10, txt="", ln=True)  # Add an empty line between questions
 
-        pdf_output = pdf.output(dest='S').encode('latin1')
-        st.download_button(
-            label="Download Questions PDF",
-            data=pdf_output,
-            file_name="quiz_questions.pdf",
-            mime="application/pdf",
-        )
+            pdf_output = pdf.output(dest='S').encode('latin1')
+            st.download_button(
+                label="Download Questions PDF",
+                data=pdf_output,
+                file_name="quiz_questions.pdf",
+                mime="application/pdf",
+            )
 
-        # Generate PDF with questions and answers
-        pdf_answers = FPDF()
-        pdf_answers.add_page()
-        pdf_answers.set_font("Arial", size=12)
-        pdf_answers.cell(200, 10, txt="Quiz Questions with Answers", ln=True, align="C")
+            # Generate PDF with questions and answers
+            pdf_answers = FPDF()
+            pdf_answers.add_page()
+            pdf_answers.set_font("Arial", size=12)
+            pdf_answers.cell(200, 10, txt="Quiz Questions with Answers", ln=True, align="C")
 
-        for idx, question in enumerate(st.session_state.questions, start=1):
-            pdf_answers.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
-            if question['type'] in ["single_select", "multiple_select", "true_false"]:
-                for option in question['options']:
-                    pdf_answers.cell(0, 10, txt=f"- {option}", ln=True)
-            pdf_answers.cell(0, 10, txt=f"Answer: {question['answer']}", ln=True)
-            pdf_answers.cell(0, 10, txt=f"Explanation: {question['explanation']}", ln=True)
-            pdf_answers.cell(0, 10, txt="", ln=True)  # Add an empty line between questions
+            for idx, question in enumerate(st.session_state.questions, start=1):
+                pdf_answers.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
+                if question['type'] in ["single_select", "multiple_select", "true_false"]:
+                    for option in question['options']:
+                        pdf_answers.cell(0, 10, txt=f"- {option}", ln=True)
+                pdf_answers.cell(0, 10, txt=f"Answer: {question['answer']}", ln=True)
+                pdf_answers.cell(0, 10, txt=f"Explanation: {question['explanation']}", ln=True)
+                pdf_answers.cell(0, 10, txt="", ln=True)  # Add an empty line between questions
 
-        pdf_answers_output = pdf_answers.output(dest='S').encode('latin1')
-        st.download_button(
-            label="Download Questions with Answers PDF",
-            data=pdf_answers_output,
-            file_name="quiz_questions_with_answers.pdf",
-            mime="application/pdf",
-        )
+            pdf_answers_output = pdf_answers.output(dest='S').encode('latin1')
+            st.download_button(
+                label="Download Questions with Answers PDF",
+                data=pdf_answers_output,
+                file_name="quiz_questions_with_answers.pdf",
+                mime="application/pdf",
+            )
