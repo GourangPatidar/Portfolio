@@ -20,13 +20,11 @@ def get_pdf_text(file):
 # Function to extract text from URL (PDF, blog, or video transcript)
 def extract_text_from_blog_url(url):
     if url.endswith('.pdf'):
-        # Extract text from PDF
         response = requests.get(url)
         with open('temp.pdf', 'wb') as f:
             f.write(response.content)
         text = get_pdf_text('temp.pdf')
     else:
-        # Extract text from web content (assuming it's a blog or article)
         response = requests.get(url)
         soup = BeautifulSoup(response.content, 'html.parser')
         paragraphs = soup.find_all('p')
@@ -91,12 +89,16 @@ def generate_quiz_questions(inputs):
     {inputs['subject']}
     """
 
-    response = OpenAI(api_key=OPENAI_API_KEY).completions.create(
-        model="gpt-4",
-        prompt=prompt,
-        max_tokens=1500,
-    )
-    return json.loads(response.choices[0].text.strip())
+    try:
+        response = OpenAI(api_key=OPENAI_API_KEY).completions.create(
+            model="gpt-4",
+            prompt=prompt,
+            max_tokens=1500,
+        )
+        return json.loads(response.choices[0].text.strip())
+    except Exception as e:
+        st.error(f"Error generating quiz questions: {str(e)}")
+        return []
 
 # Streamlit app setup
 st.title("Quiz Generator")
@@ -146,13 +148,8 @@ if st.button("Generate Quiz"):
                 "level": level,
                 "question_types": ", ".join(question_types)
             }
-            try:
-                questions = generate_quiz_questions(inputs)
-                all_questions.extend(questions)
-            except json.JSONDecodeError as e:
-                st.error(f"Error decoding JSON from response: {e}")
-            except Exception as e:
-                st.error(f"An unexpected error occurred: {str(e)}")
+            questions = generate_quiz_questions(inputs)
+            all_questions.extend(questions)
 
         st.session_state.questions = all_questions
 
