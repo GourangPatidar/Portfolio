@@ -37,7 +37,7 @@ def extract_text_from_blog_url(url):
         soup = BeautifulSoup(response.content, 'html.parser')
         paragraphs = soup.find_all('p')
         text = '\n'.join([p.get_text() for p in paragraphs])
-        text=text[50:-200]
+        text = text[50:-200]
     else:
         text = ""  # Handle other types of URLs as needed
     return text
@@ -79,8 +79,8 @@ Make sure to return the data in JSON format exactly matching this schema.
 Recipe = {{
     "question": "str",
     "options": "list",
-    "answer": "str",
-    "type": "str",  # Indicating question type (multiple_choice / true_false / numeric / theory)
+    "answer": "list" if type == "multiple_select" else "str",
+    "type": "str",  # Indicating question type (multiple_choice / true_false / numeric / theory / multiple_select)
     "explanation": "str"  # Add an explanation for the answer
 }}
 Return: list[Recipe]
@@ -114,6 +114,13 @@ example:
         "answer": "The theory of relativity is a scientific concept describing the relationship between space, time, and gravity.",
         "type": "theory",
         "explanation": "Einstein's theory of relativity includes both the special relativity and general relativity principles."
+    }},
+    {{
+        "question": "Which of the following are programming languages?",
+        "options": ["Python", "HTML", "Java", "CSS"],
+        "answer": ["Python", "Java"],
+        "type": "multiple_select",
+        "explanation": "Python and Java are programming languages, while HTML and CSS are markup and style sheet languages, respectively."
     }}
 ]
 """
@@ -123,7 +130,7 @@ llm_chain = LLMChain(llm=llm, prompt=PromptTemplate(input_variables=["num_questi
 
 # Streamlit app setup
 st.title("Quiz Generator")
-subject=""
+subject = ""
 
 # User inputs
 input_type = st.selectbox("Input Type", ["Text", "PDF", "Blog URL", "Video URL"])
@@ -148,7 +155,7 @@ elif input_type == "Blog URL":
         st.warning("please provide a valid url")
     
     subject = extract_text_from_blog_url(url)
-elif input_type == "Video URL" :
+elif input_type == "Video URL":
     url = st.text_input(f"Enter {input_type} URL")
     video_id = extract_video_id(url)
     subject = get_video_transcript(video_id)
@@ -158,7 +165,7 @@ num_questions = st.number_input("Number of Questions", min_value=1, max_value=20
 level = st.selectbox("Difficulty Level", ["Easy", "Medium", "Hard", "Expert"])
 language = st.selectbox("Language", ["English", "Spanish", "French", "German", "Chinese", "Hindi"])
 
-question_types = st.multiselect("Question Types", ["multiple_choice", "true_false", "numeric", "theory"], default=["multiple_choice", "true_false", "numeric", "theory"])
+question_types = st.multiselect("Question Types", ["multiple_choice", "true_false", "numeric", "theory", "multiple_select"], default=["multiple_choice", "true_false", "numeric", "theory"])
 
 if st.button("Generate Quiz"):
     # Ensure subject is not empty before generating the quiz
@@ -215,11 +222,14 @@ if 'questions' in st.session_state:
             user_answers[idx] = st.radio(f"Select an answer for Q{idx}:", options)
         elif question['type'] == "true_false":
             options = ["True", "False"]
-            user_answers[idx] = st.radio(f"True or False for Q{idx}:", options)
+            user_answers[idx] = st.radio(f"Select True or False for Q{idx}:", options)
         elif question['type'] == "numeric":
-            user_answers[idx] = st.number_input(f"Enter your answer for Q{idx}:", format="%.2f")
+            user_answers[idx] = st.number_input(f"Enter a number for Q{idx}:", value=0)
         elif question['type'] == "theory":
             user_answers[idx] = st.text_area(f"Write your answer for Q{idx}:")
+        elif question['type'] == "multiple_select":
+            options = question['options']
+            user_answers[idx] = st.multiselect(f"Select one or more answers for Q{idx}:", options)
 
     if st.button("Submit Quiz"):
         results = []
@@ -230,6 +240,8 @@ if 'questions' in st.session_state:
 
             if question['type'] == 'theory':
                 is_correct = None
+            elif question['type'] == 'multiple_select':
+                is_correct = set(user_answer) == set(correct_answer)
             else:
                 is_correct = user_answer == correct_answer
             
