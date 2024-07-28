@@ -47,12 +47,12 @@ def extract_video_id(url):
     # Check if the URL contains 'youtu.be/' format
     if 'youtu.be/' in url:
         video_id_index = url.index('youtu.be/') + len('youtu.be/')
-        video_id = url[video_id_index:]
+        video_id = url[video_id_index:].split('?')[0]
         return video_id
     # Check if the URL contains 'watch?v=' format
     elif 'watch?v=' in url:
         video_id_index = url.index('watch?v=') + len('watch?v=')
-        video_id = url[video_id_index:]
+        video_id = url[video_id_index:].split('&')[0]
         return video_id
     # If the URL format is not recognized
     else:
@@ -191,7 +191,7 @@ if st.button("Generate Quiz"):
             # Extract JSON part from response
             json_start_idx = raw_response.find("[")
             json_end_idx = raw_response.rfind("]")
-            if json_start_idx != -1 and json_end_idx != -1:
+            if (json_start_idx != -1 and json_end_idx != -1):
                 json_response = raw_response[json_start_idx:json_end_idx + 1]
                 data = json.loads(json_response)
             else:
@@ -222,78 +222,74 @@ if 'questions' in st.session_state:
             options = question['options']
             user_answers[idx] = st.radio(f"Select an answer for Q{idx}:", options)
         elif question['type'] == "true/false":
-            options = ["True", "False"]
-            user_answers[idx] = st.radio(f"Select True or False for Q{idx}:", options)
-        elif question['type'] == "numeric":
-            user_answers[idx] = st.number_input(f"Enter a number for Q{idx}:", value=0)
-        elif question['type'] == "theory":
-            user_answers[idx] = st.text_area(f"Write your answer for Q{idx}:")
+            options = question['options']
+            user_answers[idx] = st.radio(f"Select an answer for Q{idx}:", options)
         elif question['type'] == "multiple_select":
             options = question['options']
             user_answers[idx] = st.multiselect(f"Select one or more answers for Q{idx}:", options)
+        elif question['type'] == "numeric":
+            user_answers[idx] = st.number_input(f"Enter a numeric answer for Q{idx}:", value=0)
+        elif question['type'] == "theory":
+            user_answers[idx] = st.text_area(f"Write your answer for Q{idx}:")
 
     if st.button("Submit Quiz"):
-        results = []
-        score = 0
+        # Generate quiz results
+        correct_answers = 0
         for idx, question in enumerate(st.session_state.questions, start=1):
             correct_answer = question['answer']
             user_answer = user_answers.get(idx)
 
-            if question['type'] == 'theory':
-                is_correct = None
-            elif question['type'] == 'multiple_select':
-                is_correct = set(user_answer) == set(correct_answer)
+            if isinstance(correct_answer, list):
+                correct = set(user_answer) == set(correct_answer)
             else:
-                is_correct = user_answer == correct_answer
-            
-            if is_correct:
-                score += 1
+                correct = user_answer == correct_answer
 
-            results.append({
-                'question': question['question'],
-                'correct_answer': correct_answer,
-                'user_answer': user_answer,
-                'is_correct': is_correct,
-                'explanation': question['explanation'] if 'explanation' in question else None,
-                'type': question['type']
-            })
+            if correct:
+                correct_answers += 1
 
-        st.header("Results")
-        for result in results:
-            st.write(f"Question: {result['question']}")
-            st.write(f"Correct Answer: {result['correct_answer']}")
-            st.write(f"Your Answer: {result['user_answer']}")
-            st.write(f"Explanation: {result['explanation']}" if result['explanation'] else "No explanation provided.")
-            if result['type'] != 'theory':
-                st.write("Correct!" if result['is_correct'] else "Incorrect.")
-            st.write("---")
+        score = (correct_answers / len(st.session_state.questions)) * 100
+        st.success(f"You scored {score}%")
 
-        # Display score only if there are non-theory questions
-        non_theory_questions = [q for q in results if q['type'] != 'theory']
-        if non_theory_questions:
-            st.write(f"Your score: {score} out of {len(non_theory_questions)}")
+        # Generate PDF with questions
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=12)
+        pdf.cell(200, 10, txt="Quiz Questions", ln=True, align="C")
 
-        # Function to generate the PDF file
-        def generate_pdf(questions):
-            pdf = FPDF()
-            pdf.add_page()
-            pdf.set_font("Arial", size=12)
-            for idx, question in enumerate(questions, start=1):
-                pdf.cell(0, 10, f"Q{idx}: {question['question']}", ln=True)
-                if question['options']:
-                    for option in question['options']:
-                        pdf.cell(0, 10, f" - {option}", ln=True)
-                pdf.cell(0, 10, "", ln=True)  # Add a blank line between questions
-            return pdf
+        for idx, question in enumerate(st.session_state.questions, start=1):
+            pdf.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
+            if question['type'] in ["single_select", "multiple_select", "true/false"]:
+                for option in question['options']:
+                    pdf.cell(0, 10, txt=f"- {option}", ln=True)
+            pdf.cell(0, 10, txt="", ln=True)  # Add an empty line between questions
 
-        # Generate the PDF file
-        pdf = generate_pdf(st.session_state.questions)
-
-        # Provide a button to download the PDF
         pdf_output = pdf.output(dest='S').encode('latin1')
         st.download_button(
-            label="Download Quiz as PDF",
+            label="Download Questions PDF",
             data=pdf_output,
-            file_name="quiz.pdf",
-            mime="application/pdf"
+            file_name="quiz_questions.pdf",
+            mime="application/pdf",
+        )
+
+        # Generate PDF with questions and answers
+        pdf_answers = FPDF()
+        pdf_answers.add_page()
+        pdf_answers.set_font("Arial", size=12)
+        pdf_answers.cell(200, 10, txt="Quiz Questions with Answers", ln=True, align="C")
+
+        for idx, question in enumerate(st.session_state.questions, start=1):
+            pdf_answers.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
+            if question['type'] in ["single_select", "multiple_select", "true/false"]:
+                for option in question['options']:
+                    pdf_answers.cell(0, 10, txt=f"- {option}", ln=True)
+            pdf_answers.cell(0, 10, txt=f"Answer: {question['answer']}", ln=True)
+            pdf_answers.cell(0, 10, txt=f"Explanation: {question['explanation']}", ln=True)
+            pdf_answers.cell(0, 10, txt="", ln=True)  # Add an empty line between questions
+
+        pdf_answers_output = pdf_answers.output(dest='S').encode('latin1')
+        st.download_button(
+            label="Download Questions with Answers PDF",
+            data=pdf_answers_output,
+            file_name="quiz_questions_with_answers.pdf",
+            mime="application/pdf",
         )
