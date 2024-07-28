@@ -233,7 +233,7 @@ if 'questions' in st.session_state:
         for idx, question in enumerate(st.session_state.questions, start=1):
             correct_answer = question['answer']
             user_answer = user_answers.get(idx)
-            is_correct = user_answer == correct_answer
+            is_correct = user_answer == correct_answer if question['type'] != 'theory' else False
             if is_correct:
                 score += 1
             results.append({
@@ -249,8 +249,10 @@ if 'questions' in st.session_state:
             st.write(f"Question: {result['question']}")
             st.write(f"Correct Answer: {result['correct_answer']}")
             st.write(f"Your Answer: {result['user_answer']}")
-            st.write("Explanation: " + result['explanation'] if result['explanation'] else "No explanation provided.")
-            st.write("Correct!" if result['is_correct'] else "Incorrect.")
+            st.write(f"Explanation: {result['explanation']}" if result['explanation'] else "No explanation provided.")
+            if result['type'] != 'theory':
+                st.write("Correct!" if result['is_correct'] else "Incorrect.")
             st.write("---")
 
         st.write(f"Your score: {score} out of {len(st.session_state.questions)}")
+
