@@ -165,7 +165,7 @@ num_questions = st.number_input("Number of Questions", min_value=1, max_value=20
 level = st.selectbox("Difficulty Level", ["Easy", "Medium", "Hard", "Expert"])
 language = st.selectbox("Language", ["English", "Spanish", "French", "German", "Chinese", "Hindi"])
 
-question_types = st.multiselect("Question Types", ["single_select", "true/false", "numeric", "theory", "multiple_select"], default=["multiple_choice"])
+question_types = st.multiselect("Question Types", ["single_select", "true/false", "numeric", "theory", "multiple_select"], default=["single_select"])
 
 if st.button("Generate Quiz"):
     # Ensure subject is not empty before generating the quiz
