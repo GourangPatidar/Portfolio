@@ -217,7 +217,7 @@ if 'questions' in st.session_state:
 
     for idx, question in enumerate(st.session_state.questions, start=1):
         st.write(f"Q{idx}: {question['question']}")
-        if question['type'] == "multiple_choice":
+        if question['type'] == "single_select":
             options = question['options']
             user_answers[idx] = st.radio(f"Select an answer for Q{idx}:", options)
         elif question['type'] == "true_false":
