@@ -74,6 +74,7 @@ template = """
 Using the following JSON schema,
 Please list {num_questions} quiz questions in {language} on {subject} for {schooling_level} and difficulty level of the quiz should be {level}.
 Cover all of the topics given in the content while making questions.
+Include only the following types of questions: {question_types}.
 Make sure to return the data in JSON format exactly matching this schema.
 Recipe = {{
     "question": "str",
@@ -118,7 +119,7 @@ example:
 """
 
 # Initialize LangChain LLMChain with the prompt template
-llm_chain = LLMChain(llm=llm, prompt=PromptTemplate(input_variables=["num_questions", "language", "subject", "schooling_level", "level"], template=template))
+llm_chain = LLMChain(llm=llm, prompt=PromptTemplate(input_variables=["num_questions", "language", "subject", "schooling_level", "level", "question_types"], template=template))
 
 # Streamlit app setup
 st.title("Quiz Generator")
@@ -152,11 +153,12 @@ elif input_type == "Video URL" :
     video_id = extract_video_id(url)
     subject = get_video_transcript(video_id)
 
-
 schooling_level = st.selectbox("Schooling Level", ["Primary", "Secondary", "High School", "College", "University"])
 num_questions = st.number_input("Number of Questions", min_value=1, max_value=20, step=1)
 level = st.selectbox("Difficulty Level", ["Easy", "Medium", "Hard", "Expert"])
 language = st.selectbox("Language", ["English", "Spanish", "French", "German", "Chinese", "Hindi"])
+
+question_types = st.multiselect("Question Types", ["multiple_choice", "true_false", "numeric", "theory"], default=["multiple_choice", "true_false", "numeric", "theory"])
 
 if st.button("Generate Quiz"):
     # Ensure subject is not empty before generating the quiz
@@ -167,7 +169,8 @@ if st.button("Generate Quiz"):
             "language": language,
             "subject": subject,
             "schooling_level": schooling_level,
-            "level": level
+            "level": level,
+            "question_types": ", ".join(question_types)
         }
 
         # Generate the quiz using LangChain
@@ -219,9 +222,8 @@ if 'questions' in st.session_state:
             user_answers[idx] = st.text_area(f"Write your answer for Q{idx}:")
 
     if st.button("Submit Quiz"):
-        score = 0
         results = []
-
+        score = 0
         for idx, question in enumerate(st.session_state.questions, start=1):
             correct_answer = question['answer']
             user_answer = user_answers.get(idx)
