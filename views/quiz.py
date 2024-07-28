@@ -37,7 +37,7 @@ def extract_text_from_blog_url(url):
         soup = BeautifulSoup(response.content, 'html.parser')
         paragraphs = soup.find_all('p')
         text = '\n'.join([p.get_text() for p in paragraphs])
-        text=text[50:-200]
+        text = text[50:-200]
     else:
         text = ""  # Handle other types of URLs as needed
     return text
@@ -77,9 +77,9 @@ cover all of the topics given of the content while making questions
 Make sure to return the data in JSON format exactly matching this schema.
 Recipe = {{
     "question": "str",
-    "options": "list",
+    "options": "list",  # Only for multiple_choice type
     "answer": "str",
-    "type": "str",  # Add a type field for indicating question type (multiple_choice / true_false / numeric / etc.)
+    "type": "str",  # multiple_choice / true_false / numeric / theory
     "explanation": "str"  # Add an explanation for the answer
 }}
 Return: list[Recipe]
@@ -94,13 +94,24 @@ example:
         "explanation": "The Pacific Ocean is the largest and deepest ocean on Earth."
     }},
     {{
-        "question": " J.K. Rowling is the author of the Harry Potter series.",
+        "question": "J.K. Rowling is the author of the Harry Potter series.",
         "options": ["True", "False"],
         "answer": "True",
         "type": "true_false",
         "explanation": "J.K. Rowling is indeed the author of the Harry Potter series."
     }},
-    
+    {{
+        "question": "What is the value of pi to two decimal places?",
+        "answer": "3.14",
+        "type": "numeric",
+        "explanation": "Pi is approximately equal to 3.14."
+    }},
+    {{
+        "question": "Explain the theory of relativity.",
+        "answer": "The theory of relativity usually encompasses two interrelated theories by Albert Einstein: special relativity and general relativity.",
+        "type": "theory",
+        "explanation": "Special relativity applies to elementary particles and their interactions, describing all their physical phenomena except gravity. General relativity explains the law of gravitation and its relation to other forces of nature."
+    }}
 ]
 """
 
@@ -131,8 +142,8 @@ elif input_type == "Blog URL":
     try:
         url = st.text_input(f"Enter {input_type} URL")
     except:
-        st.warning("please provide a valid url ")
-        pass
+        st.warning("please provide a valid url")
+    
     subject = extract_text_from_blog_url(url)
 elif input_type == "Video URL" :
     url = st.text_input(f"Enter {input_type} URL")
@@ -144,15 +155,10 @@ schooling_level = st.selectbox("Schooling Level", ["Primary", "Secondary", "High
 num_questions = st.number_input("Number of Questions", min_value=1, max_value=20, step=1)
 level = st.selectbox("Difficulty Level", ["Easy", "Medium", "Hard", "Expert"])
 language = st.selectbox("Language", ["English", "Spanish", "French", "German", "Chinese", "Hindi"])
-question_type = st.selectbox("Question Type", ["Multiple Choice", "True/False", "Both"])
+question_type = st.selectbox("Question Type", ["Multiple Choice", "True/False", "Numeric", "Theory", "All"])
 
 # Mapping question type selection to LangChain template input
-if question_type == "Multiple Choice":
-    type_filter = "multiple_choice"
-elif question_type == "True/False":
-    type_filter = "true_false"
-else:
-    type_filter = "both"
+type_filter = question_type.lower()
 
 if st.button("Generate Quiz"):
     # Ensure subject is not empty before generating the quiz
@@ -172,7 +178,7 @@ if st.button("Generate Quiz"):
             raw_response = llm_chain.run(inputs)
         
             # Debugging output: print raw response
-            
+            # print(raw_response)
 
             # Extract JSON part from response
             json_start_idx = raw_response.find("[")
@@ -190,7 +196,7 @@ if st.button("Generate Quiz"):
             # Filter questions based on selected type before saving to session_state
             filtered_questions = []
             for question in data:
-                if type_filter == "both" or question["type"] == type_filter:
+                if type_filter == "all" or question["type"] == type_filter:
                     filtered_questions.append(question)
 
             st.session_state.questions = filtered_questions
@@ -215,6 +221,10 @@ if 'questions' in st.session_state:
         elif question['type'] == "true_false":
             options = ["True", "False"]
             user_answers[idx] = st.radio(f"True or False for Q{idx}:", options)
+        elif question['type'] == "numeric":
+            user_answers[idx] = st.number_input(f"Enter your answer for Q{idx}:", format="%.2f")
+        elif question['type'] == "theory":
+            user_answers[idx] = st.text_area(f"Write your answer for Q{idx}:")
 
     if st.button("Submit Quiz"):
         score = 0
