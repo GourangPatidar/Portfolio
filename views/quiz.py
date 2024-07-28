@@ -148,6 +148,7 @@ else :
             subject = get_video_transcript(video_id).strip()
             st.write(subject)
             st.write("done")
+            subject="car"
         else:
             st.warning("Please enter a valid URL.")
 
