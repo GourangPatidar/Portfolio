@@ -259,6 +259,8 @@ if 'questions' in st.session_state:
             st.write(f"Explanation: {result['explanation']}" if result['explanation'] else "No explanation provided.")
             if result['type'] != 'theory':
                 st.write("Correct!" if result['is_correct'] else "Incorrect.")
+            else:
+                st.write("Correct!" if result['is_correct'] else "Incorrect.")
             st.write("---")
 
         st.write(f"Your score: {score} out of {len(st.session_state.questions)}")
