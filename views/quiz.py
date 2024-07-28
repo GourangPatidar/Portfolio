@@ -43,7 +43,7 @@ def extract_text_from_url(url):
         soup = BeautifulSoup(response.content, 'html.parser')
         paragraphs = soup.find_all('p')
         text = '\n'.join([p.get_text() for p in paragraphs])
-        text=text[50:-50]
+        text=text[50:-200]
     else:
         text = ""  # Handle other types of URLs as needed
     return text
@@ -79,6 +79,7 @@ llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-4o-mini")
 template = """
 Using the following JSON schema,
 Please list {num_questions} quiz questions in {language} on {subject} for {schooling_level} and difficulty level of the quiz should be {level} and of type {question_type}.
+cover all of the topics given of the content while making questions
 Make sure to return the data in JSON format exactly matching this schema.
 Recipe = {{
     "question": "str",
