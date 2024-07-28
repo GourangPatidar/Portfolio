@@ -3,11 +3,13 @@ from langchain.llms import OpenAI as LangChainOpenAI
 from langchain_openai import ChatOpenAI
 from langchain import LLMChain, PromptTemplate
 from PyPDF2 import PdfReader
+from fpdf import FPDF
 import streamlit as st
 from youtube_transcript_api import YouTubeTranscriptApi
 from bs4 import BeautifulSoup
 import requests
-from fpdf import FPDF
+import zipfile
+import io
 
 css_file = "./styles/main.css"
 with open(css_file) as f:
@@ -131,7 +133,6 @@ llm_chain = LLMChain(llm=llm, prompt=PromptTemplate(input_variables=["num_questi
 
 # Streamlit app setup
 st.title("Quiz Generator")
-subject = ""
 
 # User inputs
 input_type = st.selectbox("Input Type", ["Text", "PDF", "Blog URL", "Video URL"])
@@ -168,13 +169,12 @@ language = st.selectbox("Language", ["English", "Spanish", "French", "German", "
 
 question_types = st.multiselect("Question Types", ["single_select", "true/false", "numeric", "theory", "multiple_select"], default=["single_select"])
 
-# Inputs for title and instructions
-quiz_title = st.text_input("Quiz Title", "Generated Quiz")
-instructions = st.text_area("Instructions", "Please answer the following questions:")
-
 if st.button("Generate Quiz"):
     # Ensure subject is not empty before generating the quiz
     if subject:
+        quiz_title = st.text_input("Quiz Title", "Quiz")
+        instructions = st.text_area("Instructions", "Please answer the following questions.")
+
         # Generate the prompt inputs
         inputs = {
             "num_questions": num_questions,
@@ -188,9 +188,6 @@ if st.button("Generate Quiz"):
         # Generate the quiz using LangChain
         try:
             raw_response = llm_chain.run(inputs)
-        
-            # Debugging output: print raw response
-            
 
             # Extract JSON part from response
             json_start_idx = raw_response.find("[")
@@ -208,9 +205,9 @@ if st.button("Generate Quiz"):
             # Filter questions based on selected type before saving to session_state
             st.session_state.questions = data
             st.success("Quiz generated successfully!")
-            
-            # Generate PDF after quiz generation
-            def generate_pdf(questions, title, instructions):
+
+            # Generate PDF for questions
+            def generate_questions_pdf(questions, title, instructions):
                 pdf = FPDF()
                 pdf.add_page()
                 pdf.set_font("Arial", 'B', size=16)
@@ -222,28 +219,65 @@ if st.button("Generate Quiz"):
                     pdf.cell(0, 10, f"Q{idx}: {question['question']}", ln=True)
                     if question['options']:
                         for option in question['options']:
-                            pdf.cell(0, 10, f" - {option}", ln=True)
-                    pdf.cell(0, 10, "", ln=True)  # Add a blank line between questions
+                            pdf.cell(0, 10, f"- {option}", ln=True)
+                    pdf.ln(5)  # Add a blank line after each question
                 return pdf
 
-            pdf = generate_pdf(st.session_state.questions, quiz_title, instructions)
-            pdf_output = pdf.output(dest='S').encode('latin1')
+            # Generate PDF for answers and explanations
+            def generate_answers_pdf(questions, title):
+                pdf = FPDF()
+                pdf.add_page()
+                pdf.set_font("Arial", 'B', size=16)
+                pdf.cell(0, 10, f"{title} - Answers and Explanations", ln=True, align='C')
+                pdf.set_font("Arial", size=12)
+                for idx, question in enumerate(questions, start=1):
+                    pdf.cell(0, 10, f"Q{idx}: {question['question']}", ln=True)
+                    pdf.cell(0, 10, f"Answer: {question['answer']}", ln=True)
+                    if 'explanation' in question and question['explanation']:
+                        pdf.multi_cell(0, 10, f"Explanation: {question['explanation']}", ln=True)
+                    pdf.ln(5)  # Add a blank line after each answer
+                return pdf
 
+            # Generate PDFs
+            questions_pdf = generate_questions_pdf(st.session_state.questions, quiz_title, instructions)
+            answers_pdf = generate_answers_pdf(st.session_state.questions, quiz_title)
+
+            # Save PDFs to bytes
+            questions_pdf_bytes = io.BytesIO()
+            questions_pdf.output(questions_pdf_bytes, 'F')
+            questions_pdf_bytes.seek(0)
+
+            answers_pdf_bytes = io.BytesIO()
+            answers_pdf.output(answers_pdf_bytes, 'F')
+            answers_pdf_bytes.seek(0)
+
+            # Create ZIP file
+            zip_buffer = io.BytesIO()
+            with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+                zip_file.writestr("questions.pdf", questions_pdf_bytes.read())
+                zip_file.writestr("answers.pdf", answers_pdf_bytes.read())
+            zip_buffer.seek(0)
+
+            # Provide download link for ZIP file
             st.download_button(
-                label="Download Quiz as PDF",
-                data=pdf_output,
-                file_name="quiz.pdf",
-                mime="application/pdf"
+                label="Download Quiz ZIP",
+                data=zip_buffer,
+                file_name="quiz.zip",
+                mime="application/zip"
             )
-            
+
+        except json.JSONDecodeError as e:
+            st.error(f"Error decoding JSON from response: {e}")
+            st.error(f"Raw response: {raw_response}")
         except Exception as e:
-            st.error(f"Error generating quiz: {str(e)}")
+            st.error(f"An unexpected error occurred: {str(e)}")
     else:
-        st.warning("Please enter the subject text or provide a valid input.")
+        st.warning("Please provide content (text, PDF, blog URL, or video URL) before generating the quiz.")
 
 if 'questions' in st.session_state:
-    st.header("Generated Quiz")
+    st.header("Quiz")
     user_answers = {}
+
     for idx, question in enumerate(st.session_state.questions, start=1):
         st.write(f"Q{idx}: {question['question']}")
         if question['type'] == "single_select":
@@ -301,32 +335,15 @@ if 'questions' in st.session_state:
         if non_theory_questions:
             st.write(f"Your score: {score} out of {len(non_theory_questions)}")
 
-        # Provide a button to download the results as PDF
-        def generate_results_pdf(results, title, instructions):
-            pdf = FPDF()
-            pdf.add_page()
-            pdf.set_font("Arial", 'B', size=16)
-            pdf.cell(0, 10, title, ln=True, align='C')
-            pdf.set_font("Arial", size=12)
-            pdf.multi_cell(0, 10, instructions, ln=True)
-            pdf.ln(10)  # Add a blank line after instructions
-            for result in results:
-                pdf.cell(0, 10, f"Question: {result['question']}", ln=True)
-                pdf.cell(0, 10, f"Correct Answer: {result['correct_answer']}", ln=True)
-                pdf.cell(0, 10, f"Your Answer: {result['user_answer']}", ln=True)
-                if result['explanation']:
-                    pdf.multi_cell(0, 10, f"Explanation: {result['explanation']}", ln=True)
-                if result['type'] != 'theory':
-                    pdf.cell(0, 10, "Correct!" if result['is_correct'] else "Incorrect.", ln=True)
-                pdf.ln(5)  # Add a blank line between questions
-            return pdf
-
-        results_pdf = generate_results_pdf(results, quiz_title, instructions)
-        results_pdf_output = results_pdf.output(dest='S').encode('latin1')
+        # Generate and provide download for the results PDF
+        results_pdf = generate_answers_pdf(results, quiz_title)
+        results_pdf_bytes = io.BytesIO()
+        results_pdf.output(results_pdf_bytes, 'F')
+        results_pdf_bytes.seek(0)
 
         st.download_button(
-            label="Download Results as PDF",
-            data=results_pdf_output,
+            label="Download Results PDF",
+            data=results_pdf_bytes,
             file_name="quiz_results.pdf",
             mime="application/pdf"
         )
