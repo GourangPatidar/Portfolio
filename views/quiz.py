@@ -24,19 +24,13 @@ def get_pdf_text(file):
     return text
 
 # Function to extract text from URL (PDF, blog, or video transcript)
-def extract_text_from_url(url):
+def extract_text_from_blog_url(url):
     if url.endswith('.pdf'):
         # Extract text from PDF
         response = requests.get(url)
         with open('temp.pdf', 'wb') as f:
             f.write(response.content)
         text = get_pdf_text('temp.pdf')
-    elif url.startswith('https://www.youtube.com/'):
-        # Extract text from YouTube video transcript
-        video_id = url.split('v=')[1]
-        transcript = YouTubeTranscriptApi.get_transcript(video_id)
-        text = ' '.join([t['text'] for t in transcript])
-        text=text[20:-20]
     elif url.startswith('https://'):
         # Extract text from web content (assuming it's a blog or article)
         response = requests.get(url)
@@ -45,7 +39,12 @@ def extract_text_from_url(url):
         text = '\n'.join([p.get_text() for p in paragraphs])
         text=text[50:-200]
     else:
-        text = ""  # Handle other types of URLs as needed
+        url="https://www."+url
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        paragraphs = soup.find_all('p')
+        text = '\n'.join([p.get_text() for p in paragraphs])
+        text=text[50:-200] # Handle other types of URLs as needed
     return text
 
 def extract_video_id(url):
@@ -134,11 +133,13 @@ elif input_type == "Text":
     subject = input_text.strip()
 
 elif input_type == "Blog URL":
-    url = st.text_input(f"Enter {input_type} URL")
-    
-    subject = extract_text_from_url(url)
-    st.write(subject)
-else :
+    try:
+        url = st.text_input(f"Enter {input_type} URL")
+    except:
+        st.warning("please provide a valid url starting with ")
+        pass
+    subject = extract_text_from_blog_url(url)
+elif input_type == "Video URL" :
     url = st.text_input(f"Enter {input_type} URL")
     video_id = extract_video_id(url)
     subject = get_video_transcript(video_id)
@@ -176,7 +177,7 @@ if st.button("Generate Quiz"):
             raw_response = llm_chain.run(inputs)
         
             # Debugging output: print raw response
-            st.write("Raw response:", raw_response)
+            
 
             # Extract JSON part from response
             json_start_idx = raw_response.find("[")
