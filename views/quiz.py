@@ -7,6 +7,7 @@ import streamlit as st
 from youtube_transcript_api import YouTubeTranscriptApi
 from bs4 import BeautifulSoup
 import requests
+from fpdf import FPDF
 
 css_file = "./styles/main.css"
 with open(css_file) as f:
@@ -67,7 +68,7 @@ def get_video_transcript(video_id):
         return None
 
 # Initialize OpenAI language model
-llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-4o-mini")
+llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-4")
 
 # Define the prompt template for generating quiz questions
 template = """
@@ -271,3 +272,28 @@ if 'questions' in st.session_state:
         non_theory_questions = [q for q in results if q['type'] != 'theory']
         if non_theory_questions:
             st.write(f"Your score: {score} out of {len(non_theory_questions)}")
+
+        # Function to generate the PDF file
+        def generate_pdf(questions):
+            pdf = FPDF()
+            pdf.add_page()
+            pdf.set_font("Arial", size=12)
+            for idx, question in enumerate(questions, start=1):
+                pdf.cell(0, 10, f"Q{idx}: {question['question']}", ln=True)
+                if question['options']:
+                    for option in question['options']:
+                        pdf.cell(0, 10, f" - {option}", ln=True)
+                pdf.cell(0, 10, "", ln=True)  # Add a blank line between questions
+            return pdf
+
+        # Generate the PDF file
+        pdf = generate_pdf(st.session_state.questions)
+
+        # Provide a button to download the PDF
+        pdf_output = pdf.output(dest='S').encode('latin1')
+        st.download_button(
+            label="Download Quiz as PDF",
+            data=pdf_output,
+            file_name="quiz.pdf",
+            mime="application/pdf"
+        )
