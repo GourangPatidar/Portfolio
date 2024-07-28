@@ -143,7 +143,8 @@ elif input_type == "Blog URL":
 else :
     url = st.text_input(f"Enter {input_type} URL")
     video_id = extract_video_id(url)
-    subject = get_video_transcript(video_id).strip()
+    subject = get_video_transcript(video_id)
+    subject="car"
 
 schooling_level = st.selectbox("Schooling Level", ["Primary", "Secondary", "High School", "College", "University"])
 num_questions = st.number_input("Number of Questions", min_value=1, max_value=20, step=1)
