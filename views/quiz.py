@@ -168,6 +168,10 @@ language = st.selectbox("Language", ["English", "Spanish", "French", "German", "
 
 question_types = st.multiselect("Question Types", ["single_select", "true/false", "numeric", "theory", "multiple_select"], default=["single_select"])
 
+# Inputs for title and instructions
+quiz_title = st.text_input("Quiz Title", "Generated Quiz")
+instructions = st.text_area("Instructions", "Please answer the following questions:")
+
 if st.button("Generate Quiz"):
     # Ensure subject is not empty before generating the quiz
     if subject:
@@ -204,18 +208,42 @@ if st.button("Generate Quiz"):
             # Filter questions based on selected type before saving to session_state
             st.session_state.questions = data
             st.success("Quiz generated successfully!")
-        except json.JSONDecodeError as e:
-            st.error(f"Error decoding JSON from response: {e}")
-            st.error(f"Raw response: {raw_response}")
+            
+            # Generate PDF after quiz generation
+            def generate_pdf(questions, title, instructions):
+                pdf = FPDF()
+                pdf.add_page()
+                pdf.set_font("Arial", 'B', size=16)
+                pdf.cell(0, 10, title, ln=True, align='C')
+                pdf.set_font("Arial", size=12)
+                pdf.multi_cell(0, 10, instructions, ln=True)
+                pdf.ln(10)  # Add a blank line after instructions
+                for idx, question in enumerate(questions, start=1):
+                    pdf.cell(0, 10, f"Q{idx}: {question['question']}", ln=True)
+                    if question['options']:
+                        for option in question['options']:
+                            pdf.cell(0, 10, f" - {option}", ln=True)
+                    pdf.cell(0, 10, "", ln=True)  # Add a blank line between questions
+                return pdf
+
+            pdf = generate_pdf(st.session_state.questions, quiz_title, instructions)
+            pdf_output = pdf.output(dest='S').encode('latin1')
+
+            st.download_button(
+                label="Download Quiz as PDF",
+                data=pdf_output,
+                file_name="quiz.pdf",
+                mime="application/pdf"
+            )
+            
         except Exception as e:
-            st.error(f"An unexpected error occurred: {str(e)}")
+            st.error(f"Error generating quiz: {str(e)}")
     else:
-        st.warning("Please provide content (text, PDF, blog URL, or video URL) before generating the quiz.")
+        st.warning("Please enter the subject text or provide a valid input.")
 
 if 'questions' in st.session_state:
-    st.header("Quiz")
+    st.header("Generated Quiz")
     user_answers = {}
-
     for idx, question in enumerate(st.session_state.questions, start=1):
         st.write(f"Q{idx}: {question['question']}")
         if question['type'] == "single_select":
@@ -273,27 +301,32 @@ if 'questions' in st.session_state:
         if non_theory_questions:
             st.write(f"Your score: {score} out of {len(non_theory_questions)}")
 
-        # Function to generate the PDF file
-        def generate_pdf(questions):
+        # Provide a button to download the results as PDF
+        def generate_results_pdf(results, title, instructions):
             pdf = FPDF()
             pdf.add_page()
+            pdf.set_font("Arial", 'B', size=16)
+            pdf.cell(0, 10, title, ln=True, align='C')
             pdf.set_font("Arial", size=12)
-            for idx, question in enumerate(questions, start=1):
-                pdf.cell(0, 10, f"Q{idx}: {question['question']}", ln=True)
-                if question['options']:
-                    for option in question['options']:
-                        pdf.cell(0, 10, f" - {option}", ln=True)
-                pdf.cell(0, 10, "", ln=True)  # Add a blank line between questions
+            pdf.multi_cell(0, 10, instructions, ln=True)
+            pdf.ln(10)  # Add a blank line after instructions
+            for result in results:
+                pdf.cell(0, 10, f"Question: {result['question']}", ln=True)
+                pdf.cell(0, 10, f"Correct Answer: {result['correct_answer']}", ln=True)
+                pdf.cell(0, 10, f"Your Answer: {result['user_answer']}", ln=True)
+                if result['explanation']:
+                    pdf.multi_cell(0, 10, f"Explanation: {result['explanation']}", ln=True)
+                if result['type'] != 'theory':
+                    pdf.cell(0, 10, "Correct!" if result['is_correct'] else "Incorrect.", ln=True)
+                pdf.ln(5)  # Add a blank line between questions
             return pdf
 
-        # Generate the PDF file
-        pdf = generate_pdf(st.session_state.questions)
+        results_pdf = generate_results_pdf(results, quiz_title, instructions)
+        results_pdf_output = results_pdf.output(dest='S').encode('latin1')
 
-        # Provide a button to download the PDF
-        pdf_output = pdf.output(dest='S').encode('latin1')
         st.download_button(
-            label="Download Quiz as PDF",
-            data=pdf_output,
-            file_name="quiz.pdf",
+            label="Download Results as PDF",
+            data=results_pdf_output,
+            file_name="quiz_results.pdf",
             mime="application/pdf"
         )
