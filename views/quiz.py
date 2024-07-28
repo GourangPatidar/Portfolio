@@ -36,6 +36,7 @@ def extract_text_from_url(url):
         video_id = url.split('v=')[1]
         transcript = YouTubeTranscriptApi.get_transcript(video_id)
         text = ' '.join([t['text'] for t in transcript])
+        text=text[20:-20]
     elif url.startswith('https://'):
         # Extract text from web content (assuming it's a blog or article)
         response = requests.get(url)
