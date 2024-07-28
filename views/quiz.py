@@ -81,7 +81,7 @@ Recipe = {{
     "question": "str",
     "options": "list",
     "answer": "list" if type == "multiple_select" else "str",
-    "type": "str",  # Indicating question type (multiple_choice / true_false / numeric / theory / multiple_select)
+    "type": "str",  # Indicating question type (single_select / true_false / numeric / theory / multiple_select)
     "explanation": "str"  # Add an explanation for the answer
 }}
 Return: list[Recipe]
@@ -92,7 +92,7 @@ example:
         "question": "What is the largest ocean in the world?",
         "options": ["Atlantic Ocean", "Indian Ocean", "Pacific Ocean", "Arctic Ocean"],
         "answer": "Pacific Ocean",
-        "type": "multiple_choice",
+        "type": "single_select",
         "explanation": "The Pacific Ocean is the largest and deepest ocean on Earth."
     }},
     {{
@@ -166,7 +166,7 @@ num_questions = st.number_input("Number of Questions", min_value=1, max_value=20
 level = st.selectbox("Difficulty Level", ["Easy", "Medium", "Hard", "Expert"])
 language = st.selectbox("Language", ["English", "Spanish", "French", "German", "Chinese", "Hindi"])
 
-question_types = st.multiselect("Question Types", ["single_select", "true/false", "numeric", "theory", "multiple_select"], default=["single_select"])
+question_types = st.multiselect("Question Types", ["single_select", "true_false", "numeric", "theory", "multiple_select"], default=["single_select"])
 
 if st.button("Generate Quiz"):
     # Ensure subject is not empty before generating the quiz
@@ -202,7 +202,10 @@ if st.button("Generate Quiz"):
                 st.warning(f"Only {len(data)} questions were generated. You may want to adjust the parameters.")
 
             # Filter questions based on selected type before saving to session_state
-            st.session_state.questions = data
+            sorted_data = []
+            for qtype in question_types:
+                sorted_data.extend([q for q in data if q['type'] == qtype])
+            st.session_state.questions = sorted_data
             st.success("Quiz generated successfully!")
         except json.JSONDecodeError as e:
             st.error(f"Error decoding JSON from response: {e}")
@@ -217,10 +220,13 @@ if 'questions' in st.session_state:
     user_answers = {}
 
     for idx, question in enumerate(st.session_state.questions, start=1):
-        st.write(f"Q{idx}: {question['question']}")
+        st.write(f"**Q{idx}: {question['question']}**")
         if question['type'] == "single_select":
             options = question['options']
-            user_answers[idx] = st.radio(f"Select an answer for Q{idx}:", options)
+            user_answers[idx] = st.radio(f"Select one answer for Q{idx}:", options)
+        elif question['type'] == "true_false":
+            options = ["True", "False"]
+            user_answers[idx] = st.radio(f"Select True or False for Q{idx}:", options)
         elif question['type'] == "multiple_select":
             options = question['options']
             user_answers[idx] = st.multiselect(f"Select one or more answers for Q{idx}:", options)
@@ -297,7 +303,7 @@ if 'questions' in st.session_state:
 
         for idx, question in enumerate(st.session_state.questions, start=1):
             pdf_answers.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
-            if question['type'] in ["single_select", "multiple_select", "true/false"]:
+            if question['type'] in ["single_select", "multiple_select", "true_false"]:
                 for option in question['options']:
                     pdf_answers.cell(0, 10, txt=f"- {option}", ln=True)
             pdf_answers.cell(0, 10, txt=f"Answer: {question['answer']}", ln=True)
