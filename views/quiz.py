@@ -129,6 +129,7 @@ if input_type == "PDF":
 elif input_type == "Text":
     input_text = st.text_area("Enter Text")
     subject = input_text.strip()
+    subject="car"
 
 elif input_type == "Blog URL":
     url = st.text_input(f"Enter {input_type} URL")
