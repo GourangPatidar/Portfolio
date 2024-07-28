@@ -2,11 +2,9 @@ import json
 import requests
 import streamlit as st
 from PyPDF2 import PdfReader
-from langchain.llms import OpenAI as LangChainOpenAI
-from langchain_openai import ChatOpenAI
-from langchain import LLMChain, PromptTemplate
 from youtube_transcript_api import YouTubeTranscriptApi
 from bs4 import BeautifulSoup
+from openai import OpenAI
 
 # Load OpenAI API key from Streamlit secrets
 OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
@@ -27,15 +25,12 @@ def extract_text_from_blog_url(url):
         with open('temp.pdf', 'wb') as f:
             f.write(response.content)
         text = get_pdf_text('temp.pdf')
-    elif url.startswith('https://'):
+    else:
         # Extract text from web content (assuming it's a blog or article)
         response = requests.get(url)
         soup = BeautifulSoup(response.content, 'html.parser')
         paragraphs = soup.find_all('p')
-        text = '\n.join([p.get_text() for p in paragraphs])
-        text = text[50:-200]
-    else:
-        text = ""  # Handle other types of URLs as needed
+        text = '\n'.join([p.get_text() for p in paragraphs])
     return text
 
 def extract_video_id(url):
@@ -59,67 +54,49 @@ def get_video_transcript(video_id):
         st.error(f"Error fetching transcript: {str(e)}")
         return None
 
-# Initialize OpenAI language model
-llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-4")
+# Function to split text into smaller chunks
+def split_text_into_chunks(text, max_length=2000):
+    words = text.split()
+    chunks = []
+    current_chunk = []
+    for word in words:
+        if len(" ".join(current_chunk + [word])) > max_length:
+            chunks.append(" ".join(current_chunk))
+            current_chunk = [word]
+        else:
+            current_chunk.append(word)
+    if current_chunk:
+        chunks.append(" ".join(current_chunk))
+    return chunks
 
-# Define the prompt template for generating quiz questions
-template = """
-Using the following JSON schema,
-Please list {num_questions} quiz questions in {language} on {subject} for {schooling_level} and difficulty level of the quiz should be {level}.
-Cover all of the topics given in the content while making questions.
-Include only the following types of questions: {question_types}.
-Make sure to return the data in JSON format exactly matching this schema.
-Recipe = {{
-    "question": "str",
-    "options": "list",
-    "answer": "list" if type == "multiple_select" else "str",
-    "type": "str",  # Indicating question type (multiple_choice / true_false / numeric / theory / multiple_select)
-    "explanation": "str"  # Add an explanation for the answer
-}}
-Return: list[Recipe]
+# Function to generate quiz questions
+def generate_quiz_questions(inputs):
+    prompt = f"""
+    Please list {inputs['num_questions']} quiz questions in {inputs['language']} on the following subject for {inputs['schooling_level']} and difficulty level of the quiz should be {inputs['level']}.
+    Cover all of the topics given in the content while making questions.
+    Include only the following types of questions: {inputs['question_types']}.
+    Return the data in JSON format exactly matching this schema:
 
-example:
-[
-    {{
-        "question": "What is the largest ocean in the world?",
-        "options": ["Atlantic Ocean", "Indian Ocean", "Pacific Ocean", "Arctic Ocean"],
-        "answer": "Pacific Ocean",
-        "type": "multiple_choice",
-        "explanation": "The Pacific Ocean is the largest and deepest ocean on Earth."
-    }},
-    {{
-        "question": " J.K. Rowling is the author of the Harry Potter series.",
-        "options": ["True", "False"],
-        "answer": "True",
-        "type": "true_false",
-        "explanation": "J.K. Rowling is indeed the author of the Harry Potter series."
-    }},
-    {{
-        "question": "What is 5 + 3?",
-        "options": [],
-        "answer": "8",
-        "type": "numeric",
-        "explanation": "The sum of 5 and 3 is 8."
-    }},
-    {{
-        "question": "Explain the theory of relativity.",
-        "options": [],
-        "answer": "The theory of relativity is a scientific concept describing the relationship between space, time, and gravity.",
-        "type": "theory",
-        "explanation": "Einstein's theory of relativity includes both the special relativity and general relativity principles."
-    }},
-    {{
-        "question": "Which of the following are programming languages?",
-        "options": ["Python", "HTML", "Java", "CSS"],
-        "answer": ["Python", "Java"],
-        "type": "multiple_select",
-        "explanation": "Python and Java are programming languages, while HTML and CSS are markup and style sheet languages, respectively."
-    }}
-]
-"""
+    [
+        {{
+            "question": "str",
+            "options": "list",
+            "answer": "list" if type == "multiple_select" else "str",
+            "type": "str",  # Indicating question type (multiple_choice / true_false / numeric / theory / multiple_select)
+            "explanation": "str"  # Add an explanation for the answer
+        }}
+    ]
 
-# Initialize LangChain LLMChain with the prompt template
-llm_chain = LLMChain(llm=llm, prompt=PromptTemplate(input_variables=["num_questions", "language", "subject", "schooling_level", "level", "question_types"], template=template))
+    Subject Content:
+    {inputs['subject']}
+    """
+
+    response = OpenAI(api_key=OPENAI_API_KEY).completions.create(
+        model="gpt-4",
+        prompt=prompt,
+        max_tokens=1500,
+    )
+    return json.loads(response.choices[0].text.strip())
 
 # Streamlit app setup
 st.title("Quiz Generator")
@@ -153,20 +130,6 @@ level = st.selectbox("Difficulty Level", ["Easy", "Medium", "Hard", "Expert"])
 language = st.selectbox("Language", ["English", "Spanish", "French", "German", "Chinese", "Hindi"])
 question_types = st.multiselect("Question Types", ["multiple_choice", "true_false", "numeric", "theory", "multiple_select"], default=["multiple_choice", "true_false", "numeric", "theory"])
 
-def split_text_into_chunks(text, max_length=2000):
-    words = text.split()
-    chunks = []
-    current_chunk = []
-    for word in words:
-        if len(" ".join(current_chunk + [word])) > max_length:
-            chunks.append(" ".join(current_chunk))
-            current_chunk = [word]
-        else:
-            current_chunk.append(word)
-    if current_chunk:
-        chunks.append(" ".join(current_chunk))
-    return chunks
-
 if st.button("Generate Quiz"):
     if subject:
         chunks = split_text_into_chunks(subject)
@@ -184,18 +147,10 @@ if st.button("Generate Quiz"):
                 "question_types": ", ".join(question_types)
             }
             try:
-                raw_response = llm_chain.run(inputs)
-                json_start_idx = raw_response.find("[")
-                json_end_idx = raw_response.rfind("]")
-                if json_start_idx != -1 and json_end_idx != -1:
-                    json_response = raw_response[json_start_idx:json_end_idx + 1]
-                    data = json.loads(json_response)
-                    all_questions.extend(data)
-                else:
-                    raise ValueError("No JSON part found in response")
+                questions = generate_quiz_questions(inputs)
+                all_questions.extend(questions)
             except json.JSONDecodeError as e:
                 st.error(f"Error decoding JSON from response: {e}")
-                st.error(f"Raw response: {raw_response}")
             except Exception as e:
                 st.error(f"An unexpected error occurred: {str(e)}")
 
@@ -238,7 +193,7 @@ if st.button("Generate Quiz"):
                     'correct_answer': correct_answer,
                     'user_answer': user_answer,
                     'is_correct': is_correct,
-                    'explanation': question['explanation'] if 'explanation' in question else None,
+                    'explanation': question.get('explanation'),
                     'type': question['type']
                 })
 
