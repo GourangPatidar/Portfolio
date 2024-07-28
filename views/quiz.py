@@ -134,12 +134,8 @@ elif input_type == "Text":
 elif input_type == "Blog URL":
     url = st.text_input(f"Enter {input_type} URL")
     
-    if st.button("Fetch Content"):
-        if url:
-            subject = extract_text_from_url(url).strip()
-            st.write(subject)
-        else:
-            st.warning("Please enter a valid URL.")
+    subject = extract_text_from_url(url).strip()
+    st.write(subject)
 else :
     url = st.text_input(f"Enter {input_type} URL")
     video_id = extract_video_id(url)
