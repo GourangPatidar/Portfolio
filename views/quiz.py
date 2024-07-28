@@ -221,9 +221,6 @@ if 'questions' in st.session_state:
         if question['type'] == "single_select":
             options = question['options']
             user_answers[idx] = st.radio(f"Select an answer for Q{idx}:", options)
-        elif question['type'] == "true/false":
-            options = question['options']
-            user_answers[idx] = st.radio(f"Select an answer for Q{idx}:", options)
         elif question['type'] == "multiple_select":
             options = question['options']
             user_answers[idx] = st.multiselect(f"Select one or more answers for Q{idx}:", options)
@@ -235,6 +232,8 @@ if 'questions' in st.session_state:
     if st.button("Submit Quiz"):
         # Generate quiz results
         correct_answers = 0
+        results = []
+
         for idx, question in enumerate(st.session_state.questions, start=1):
             correct_answer = question['answer']
             user_answer = user_answers.get(idx)
@@ -244,11 +243,30 @@ if 'questions' in st.session_state:
             else:
                 correct = user_answer == correct_answer
 
+            result = {
+                "question": question['question'],
+                "user_answer": user_answer,
+                "correct_answer": correct_answer,
+                "explanation": question['explanation'],
+                "correct": correct
+            }
+            results.append(result)
+
             if correct:
                 correct_answers += 1
 
         score = (correct_answers / len(st.session_state.questions)) * 100
         st.success(f"You scored {score}%")
+
+        # Display results with correct answers, explanations, user answers, and correct/incorrect status
+        st.header("Results")
+        for result in results:
+            st.write(f"**Question:** {result['question']}")
+            st.write(f"**Your Answer:** {result['user_answer']}")
+            st.write(f"**Correct Answer:** {result['correct_answer']}")
+            st.write(f"**Explanation:** {result['explanation']}")
+            st.write(f"**Status:** {'Correct' if result['correct'] else 'Incorrect'}")
+            st.write("---")
 
         # Generate PDF with questions
         pdf = FPDF()
