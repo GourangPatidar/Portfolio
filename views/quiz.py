@@ -277,8 +277,8 @@ if 'questions' in st.session_state:
                 st.write("---")
 
             # Generate PDF with questions
-            level = st.selectbox("Download/share", ["PDF", "share"])
-            if level=="PDF":
+            download = st.selectbox("Download/share", ["PDF", "share"])
+            if download=="PDF":
                 pdf = FPDF()
                 pdf.add_page()
                 pdf.set_font("Arial", size=12)
@@ -321,7 +321,7 @@ if 'questions' in st.session_state:
                     file_name="quiz_questions_with_answers.pdf",
                     mime="application/pdf",
                 )
-            elif level=="share":
+            elif download=="share":
                 st.write("this functionality is not implemented yet !")
                 st.button("share quiz with a link")
             
