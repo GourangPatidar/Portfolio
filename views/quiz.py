@@ -216,6 +216,9 @@ if st.button("Generate Quiz"):
         else:
             st.warning("Please provide content (text, PDF, blog URL, or video URL) before generating the quiz.")
 
+pdf_output=""
+pdf_answers_output=""
+
 if 'questions' in st.session_state:
     st.header("Quiz")
     user_answers = {}
@@ -290,12 +293,7 @@ if 'questions' in st.session_state:
                 pdf.cell(0, 10, txt="", ln=True)  # Add an empty line between questions
 
             pdf_output = pdf.output(dest='S').encode('latin1')
-            st.download_button(
-                label="Download Questions PDF",
-                data=pdf_output,
-                file_name="quiz_questions.pdf",
-                mime="application/pdf",
-            )
+            
 
             # Generate PDF with questions and answers
             pdf_answers = FPDF()
@@ -319,3 +317,18 @@ if 'questions' in st.session_state:
                 file_name="quiz_questions_with_answers.pdf",
                 mime="application/pdf",
             )
+    st.download_button(
+                label="Download Questions PDF",
+                data=pdf_output,
+                file_name="quiz_questions.pdf",
+                mime="application/pdf",
+            )
+    st.download_button(
+                label="Download Questions with Answers PDF",
+                data=pdf_answers_output,
+                file_name="quiz_questions_with_answers.pdf",
+                mime="application/pdf",
+            )
+    
+        
+    
