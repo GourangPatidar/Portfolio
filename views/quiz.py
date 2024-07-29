@@ -291,7 +291,7 @@ if 'questions' in st.session_state:
                         pdf.cell(0, 10, txt=f"- {option}", ln=True)
                 pdf.cell(0, 10, txt="", ln=True)  # Add an empty line between questions
 
-            global pdf_output
+            
             pdf_output = pdf.output(dest='S').encode('latin1')
             
 
@@ -310,7 +310,7 @@ if 'questions' in st.session_state:
                 pdf_answers.cell(0, 10, txt=f"Explanation: {question['explanation']}", ln=True)
                 pdf_answers.cell(0, 10, txt="", ln=True)  # Add an empty line between questions
             
-            global pdf_answers_output
+            
 
             pdf_answers_output = pdf_answers.output(dest='S').encode('latin1')
             st.download_button(
