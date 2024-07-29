@@ -201,8 +201,8 @@ def generate_question_paper_pdf(questions, school_name, exam_title, exam_time, t
         pdf.set_font("Arial", 'B', size=12)
         pdf.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
         pdf.set_font("Arial", size=12)
-        if question['type'] in ["single_select", "multiple_select", "true_false"]:
-            for option in question['options']:
+        if question['type'] in ["single_select", "multiple_select"]:
+            for i, option in enumerate(question['options']):
                 pdf.cell(0, 10, txt=f" - {option}", ln=True)
         pdf.cell(0, 10, txt="", ln=True)  # Add a space between questions
 
@@ -216,7 +216,33 @@ if st.button("Generate Quiz"):
         try:
             questions = json.loads(question_data)
             st.success("Quiz generated successfully!")
-            st.write(questions)
+            
+            st.write("### Quiz Questions")
+            user_answers = []
+
+            for idx, question in enumerate(questions, start=1):
+                st.write(f"**Q{idx}: {question['question']}**")
+                options = question['options']
+                user_answer = st.radio(f"Select an answer for question {idx}", options, key=f"q{idx}")
+                user_answers.append({"question": question['question'], "user_answer": user_answer, "correct_answer": question['answer'], "explanation": question['explanation']})
+
+            if st.button("Submit Answers"):
+                st.write("### Results")
+                score = 0
+                total = len(questions)
+
+                for idx, answer in enumerate(user_answers, start=1):
+                    if answer['user_answer'] == answer['correct_answer']:
+                        score += 1
+                        st.write(f"**Q{idx}: Correct!**")
+                    else:
+                        st.write(f"**Q{idx}: Incorrect.**")
+                    st.write(f"Your Answer: {answer['user_answer']}")
+                    st.write(f"Correct Answer: {answer['correct_answer']}")
+                    st.write(f"Explanation: {answer['explanation']}")
+                    st.write("")
+
+                st.write(f"**Your Score: {score}/{total}**")
 
             # Generate and display options for downloading or sharing the quiz
             option = st.selectbox("Choose an option", ["Download as PDF", "Share Quiz"])
@@ -238,6 +264,9 @@ if st.button("Generate Quiz"):
                 
                 for idx, question in enumerate(questions, start=1):
                     answer_pdf.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
+                    if question['type'] in ["single_select", "multiple_select"]:
+                        for i, option in enumerate(question['options']):
+                            answer_pdf.cell(0, 10, txt=f" - {option}", ln=True)
                     answer_pdf.cell(0, 10, txt=f"Answer: {question['answer']}", ln=True)
                     answer_pdf.cell(0, 10, txt=f"Explanation: {question['explanation']}", ln=True)
                     answer_pdf.cell(0, 10, txt="", ln=True)  # Add a space between questions
