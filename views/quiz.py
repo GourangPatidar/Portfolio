@@ -65,7 +65,7 @@ def get_video_transcript(video_id):
         transcript_text = ' '.join([entry['text'] for entry in transcript])
         return transcript_text
     except Exception as e:
-        print(f"Error fetching transcript: {str(e)}")
+        st.error(f"Error fetching transcript: {str(e)}")
         return None
 
 # Initialize OpenAI language model
@@ -139,6 +139,7 @@ school_name = st.sidebar.text_input("School/College Name", "Example School")
 exam_title = st.sidebar.text_input("Exam Title", "Mid-Term Examination")
 exam_time = st.sidebar.text_input("Time Allowed", "2 hours")
 total_marks = st.sidebar.text_input("Total Marks", "50")
+study = st.sidebar.text_input("class", "1st semester")
 
 subject = ""
 
@@ -178,97 +179,81 @@ language = st.selectbox("Language", ["English", "Spanish", "French", "German", "
 question_types = st.multiselect("Question Types", ["single_select", "true_false", "numeric", "theory", "multiple_select"], default=["single_select"])
 
 # Function to generate question paper PDF with header
-def generate_question_paper_pdf(questions, school_name, exam_title, exam_time, total_marks):
+def generate_question_paper_pdf(questions, school_name, exam_title, exam_time, total_marks, subject ,study):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", size=12)
+    pdf.set_font("Arial", 'B', size=12)
     
     # Add header information
-    pdf.cell(0, 10, txt=f"School/College: {school_name}", ln=True, align="L")
-    pdf.cell(0, 10, txt=f"Exam Title: {exam_title}", ln=True, align="L")
-    pdf.cell(0, 10, txt=f"Time Allowed: {exam_time}", ln=True, align="L")
-    pdf.cell(0, 10, txt=f"Total Marks: {total_marks}", ln=True, align="L")
+    pdf.cell(0, 10, txt=school_name, ln=True, align="C")
+    pdf.cell(0, 10, txt=exam_title, ln=True, align="C")
+    pdf.cell(0, 10, txt=subject, ln=True, align="C")
     pdf.cell(0, 10, txt="", ln=True)  # Add an empty line after header
-    
+    pdf.set_font("Arial", size=12)
+
+    # Add header information (smaller text)
+    pdf.cell(0, 10, txt=f"STD -:{study}", ln=True, align="L")
+    pdf.cell(0, 10, txt=f"TIME : {exam_time}", ln=True, align="C")
+    pdf.cell(0, 10, txt=f"MAXIMUM MARKS {total_marks}", ln=True, align="R")
+    pdf.cell(0, 10, txt="", ln=True)  # Add an empty line after header
+
     # Add questions
     for idx, question in enumerate(questions, start=1):
+        pdf.set_font("Arial", 'B', size=12)
         pdf.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
+        pdf.set_font("Arial", size=12)
         if question['type'] in ["single_select", "multiple_select", "true_false"]:
             for option in question['options']:
                 pdf.cell(0, 10, txt=f"- {option}", ln=True)
-        pdf.cell(0, 10, txt="", ln=True)  # Add an empty line between questions
-    
-    return pdf.output(dest='S').encode('latin1')
+        pdf.cell(0, 10, txt=f"Answer: {question['answer']}", ln=True)
+        pdf.cell(0, 10, txt=f"Explanation: {question['explanation']}", ln=True)
+        pdf.cell(0, 10, txt="", ln=True)  # Add a space between questions
 
-# Function to generate PDF with answers
-def generate_answers_pdf(questions, school_name, exam_title, exam_time, total_marks):
-    pdf_answers = FPDF()
-    pdf_answers.add_page()
-    pdf_answers.set_font("Arial", size=12)
-    
-    # Add header information
-    pdf_answers.cell(0, 10, txt=f"School/College: {school_name}", ln=True, align="L")
-    pdf_answers.cell(0, 10, txt=f"Exam Title: {exam_title}", ln=True, align="L")
-    pdf_answers.cell(0, 10, txt=f"Time Allowed: {exam_time}", ln=True, align="L")
-    pdf_answers.cell(0, 10, txt=f"Total Marks: {total_marks}", ln=True, align="L")
-    pdf_answers.cell(0, 10, txt="", ln=True)  # Add an empty line after header
-    
-    # Add questions with answers
-    for idx, question in enumerate(questions, start=1):
-        pdf_answers.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
-        if question['type'] in ["single_select", "multiple_select", "true_false"]:
-            for option in question['options']:
-                pdf_answers.cell(0, 10, txt=f"- {option}", ln=True)
-        pdf_answers.cell(0, 10, txt=f"Answer: {question['answer']}", ln=True)
-        pdf_answers.cell(0, 10, txt=f"Explanation: {question['explanation']}", ln=True)
-        pdf_answers.cell(0, 10, txt="", ln=True)  # Add an empty line between questions
-    
-    return pdf_answers.output(dest='S').encode('latin1')
+    return pdf
 
+# Streamlit buttons for generating quiz and downloading PDFs
 if st.button("Generate Quiz"):
-    with st.spinner("Generating quiz..."):
-        # Generate quiz questions
+    if subject:
+        question_data = llm_chain.run(num_questions=num_questions, language=language, subject=subject, schooling_level=schooling_level, level=level, question_types=question_types)
         try:
-            quiz_data = llm_chain.run(
-                num_questions=num_questions,
-                language=language,
-                subject=subject,
-                schooling_level=schooling_level,
-                level=level,
-                question_types=question_types
-            )
-            questions = json.loads(quiz_data)
+            questions = json.loads(question_data)
+            st.success("Quiz generated successfully!")
+            st.write(questions)
             
-            # Generate PDF with questions
-            pdf_output = generate_question_paper_pdf(
-                questions,
-                school_name,
-                exam_title,
-                exam_time,
-                total_marks
-            )
-            st.download_button(
-                label="Download Questions PDF",
-                data=pdf_output,
-                file_name="quiz_questions.pdf",
-                mime="application/pdf",
-            )
+            # Generate and display options for downloading or sharing the quiz
+            option = st.selectbox("Choose an option", ["Download as PDF", "Share Quiz"])
+            
+            if option == "Download as PDF":
+                question_pdf = generate_question_paper_pdf(questions, school_name, exam_title, exam_time, total_marks, subject)
+                
+                question_pdf_output = f"question_paper_{subject.replace(' ', '_')}.pdf"
+                question_pdf.output(question_pdf_output)
+                
+                with open(question_pdf_output, "rb") as f:
+                    st.download_button("Download Question Paper", f, file_name=question_pdf_output)
 
-            # Generate PDF with questions and answers
-            pdf_answers_output = generate_answers_pdf(
-                questions,
-                school_name,
-                exam_title,
-                exam_time,
-                total_marks
-            )
-            st.download_button(
-                label="Download Questions with Answers PDF",
-                data=pdf_answers_output,
-                file_name="quiz_questions_with_answers.pdf",
-                mime="application/pdf",
-            )
-        except Exception as e:
-            st.error(f"Error generating quiz: {e}")
+                answer_pdf = FPDF()
+                answer_pdf.add_page()
+                answer_pdf.set_font("Arial", 'B', size=12)
+                answer_pdf.cell(0, 10, txt="Answer Key", ln=True, align="C")
+                answer_pdf.set_font("Arial", size=12)
+                
+                for idx, question in enumerate(questions, start=1):
+                    answer_pdf.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
+                    answer_pdf.cell(0, 10, txt=f"Answer: {question['answer']}", ln=True)
+                    answer_pdf.cell(0, 10, txt=f"Explanation: {question['explanation']}", ln=True)
+                    answer_pdf.cell(0, 10, txt="", ln=True)  # Add a space between questions
 
-# Add the rest of the code here if there are any additional features or functionalities
+                answer_pdf_output = f"answer_key_{subject.replace(' ', '_')}.pdf"
+                answer_pdf.output(answer_pdf_output)
+                
+                with open(answer_pdf_output, "rb") as f:
+                    st.download_button("Download Answer Key", f, file_name=answer_pdf_output)
+                    
+            elif option == "Share Quiz":
+                st.text("Sharing functionality is not yet implemented.")
+                
+        except json.JSONDecodeError:
+            st.error("Error decoding JSON response from the language model.")
+    else:
+        st.warning("Please provide the required input to generate the quiz.")
