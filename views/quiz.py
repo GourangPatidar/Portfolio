@@ -9,7 +9,6 @@ from bs4 import BeautifulSoup
 import requests
 from fpdf import FPDF
 
-# CSS styling
 css_file = "./styles/main.css"
 with open(css_file) as f:
     st.markdown("<style>{}</style>".format(f.read()), unsafe_allow_html=True)
@@ -65,11 +64,11 @@ def get_video_transcript(video_id):
         transcript_text = ' '.join([entry['text'] for entry in transcript])
         return transcript_text
     except Exception as e:
-        st.error(f"Error fetching transcript: {str(e)}")
+        print(f"Error fetching transcript: {str(e)}")
         return None
 
 # Initialize OpenAI language model
-llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-4")
+llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-3.5-turbo")
 
 # Define the prompt template for generating quiz questions
 template = """
@@ -132,20 +131,6 @@ llm_chain = LLMChain(llm=llm, prompt=PromptTemplate(input_variables=["num_questi
 
 # Streamlit app setup
 st.title("Quiz Generator")
-
-# State management
-if "questions" not in st.session_state:
-    st.session_state.questions = None
-if "user_answers" not in st.session_state:
-    st.session_state.user_answers = None
-
-# Collect header information
-st.sidebar.header("Question Paper Details")
-school_name = st.sidebar.text_input("School/College Name", "Example School")
-exam_title = st.sidebar.text_input("Exam Title", "Mid-Term Examination")
-exam_time = st.sidebar.text_input("Time Allowed", "2 hours")
-total_marks = st.sidebar.text_input("Total Marks", "50")
-
 subject = ""
 
 # User inputs
@@ -165,140 +150,172 @@ elif input_type == "Text":
     subject = input_text.strip()
 
 elif input_type == "Blog URL":
-    url = st.text_input(f"Enter {input_type} URL")
-    if url:
-        try:
-            subject = extract_text_from_blog_url(url)
-        except Exception as e:
-            st.warning(f"Error extracting text from URL: {str(e)}")
-
+    try:
+        url = st.text_input(f"Enter {input_type} URL")
+    except:
+        st.warning("please provide a valid url")
+    
+    subject = extract_text_from_blog_url(url)
 elif input_type == "Video URL":
     url = st.text_input(f"Enter {input_type} URL")
-    if url:
-        video_id = extract_video_id(url)
-        if video_id:
-            subject = get_video_transcript(video_id)
+    video_id = extract_video_id(url)
+    subject = get_video_transcript(video_id)
 
 schooling_level = st.selectbox("Schooling Level", ["Primary", "Secondary", "High School", "College", "University"])
 num_questions = st.number_input("Number of Questions", min_value=1, max_value=20, step=1)
 level = st.selectbox("Difficulty Level", ["Easy", "Medium", "Hard", "Expert"])
 language = st.selectbox("Language", ["English", "Spanish", "French", "German", "Chinese", "Hindi"])
+
 question_types = st.multiselect("Question Types", ["single_select", "true_false", "numeric", "theory", "multiple_select"], default=["single_select"])
 
-# Function to generate question paper PDF with header
-def generate_question_paper_pdf(questions, school_name, exam_title, exam_time, total_marks, subject):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", 'B', size=12)
-    
-    # Add header information
-    pdf.cell(0, 10, txt=school_name, ln=True, align="C")
-    pdf.cell(0, 10, txt=exam_title, ln=True, align="C")
-    pdf.cell(0, 10, txt=subject, ln=True, align="C")
-    pdf.cell(0, 10, txt="", ln=True)  # Add an empty line after header
-    pdf.set_font("Arial", size=12)
-
-    # Add header information (smaller text)
-    pdf.cell(0, 10, txt=f"STD - VII", ln=True, align="L")
-    pdf.cell(0, 10, txt=f"TIME : {exam_time}", ln=True, align="C")
-    pdf.cell(0, 10, txt=f"MAXIMUM MARKS {total_marks}", ln=True, align="R")
-    pdf.cell(0, 10, txt="", ln=True)  # Add an empty line after header
-
-    # Add questions
-    for idx, question in enumerate(questions, start=1):
-        pdf.set_font("Arial", 'B', size=12)
-        pdf.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
-        pdf.set_font("Arial", size=12)
-        if question['type'] in ["single_select", "multiple_select"]:
-            for i, option in enumerate(question['options']):
-                pdf.cell(0, 10, txt=f" - {option}", ln=True)
-        pdf.cell(0, 10, txt="", ln=True)  # Add a space between questions
-
-    return pdf
-
-# Function to generate answer key PDF
-def generate_answer_key_pdf(questions, school_name, exam_title, exam_time, total_marks, subject):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", 'B', size=12)
-    pdf.cell(0, 10, txt="Answer Key", ln=True, align="C")
-    pdf.set_font("Arial", size=12)
-    
-    for idx, question in enumerate(questions, start=1):
-        pdf.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
-        if question['type'] in ["single_select", "multiple_select"]:
-            for i, option in enumerate(question['options']):
-                pdf.cell(0, 10, txt=f" - {option}", ln=True)
-        pdf.cell(0, 10, txt=f"Answer: {question['answer']}", ln=True)
-        pdf.cell(0, 10, txt=f"Explanation: {question['explanation']}", ln=True)
-        pdf.cell(0, 10, txt="", ln=True)  # Add a space between questions
-
-    return pdf
-
-# Streamlit buttons for generating quiz and downloading PDFs
 if st.button("Generate Quiz"):
-    if subject:
-        with st.spinner("Generating quiz..."):
-            question_data = llm_chain.run(num_questions=num_questions, language=language, subject=subject, schooling_level=schooling_level, level=level, question_types=question_types)
-        try:
-            questions = json.loads(question_data)
-            st.session_state.questions = questions
-            st.session_state.user_answers = []
-            st.success("Quiz generated successfully!")
-        except json.JSONDecodeError:
-            st.error("Error decoding JSON response from the language model.")
-    else:
-        st.warning("Please provide the required input to generate the quiz.")
+    with st.spinner("Generating quiz..."):
+        # Ensure subject is not empty before generating the quiz
+        if subject:
+            # Generate the prompt inputs
+            inputs = {
+                "num_questions": num_questions,
+                "language": language,
+                "subject": subject,
+                "schooling_level": schooling_level,
+                "level": level,
+                "question_types": ", ".join(question_types)
+            }
 
-# Display quiz questions
-if st.session_state.questions:
-    st.write("### Quiz Questions")
+            # Generate the quiz using LangChain
+            try:
+                raw_response = llm_chain.run(inputs)
+            
+                # Debugging output: print raw response
+                
+
+                # Extract JSON part from response
+                json_start_idx = raw_response.find("[")
+                json_end_idx = raw_response.rfind("]")
+                if (json_start_idx != -1 and json_end_idx != -1):
+                    json_response = raw_response[json_start_idx:json_end_idx + 1]
+                    data = json.loads(json_response)
+                else:
+                    raise ValueError("No JSON part found in response")
+
+                # Check if the number of questions generated is less than requested
+                if len(data) < num_questions:
+                    st.warning(f"Only {len(data)} questions were generated. You may want to adjust the parameters.")
+
+                # Filter questions based on selected type before saving to session_state
+                sorted_data = []
+                for qtype in question_types:
+                    sorted_data.extend([q for q in data if q['type'] == qtype])
+                st.session_state.questions = sorted_data
+                st.success("Quiz generated successfully!")
+            except json.JSONDecodeError as e:
+                st.error(f"Error decoding JSON from response: {e}")
+                st.error(f"Raw response: {raw_response}")
+            except Exception as e:
+                st.error(f"An unexpected error occurred: {str(e)}")
+        else:
+            st.warning("Please provide content (text, PDF, blog URL, or video URL) before generating the quiz.")
+
+if 'questions' in st.session_state:
+    st.header("Quiz")
+    user_answers = {}
+
     for idx, question in enumerate(st.session_state.questions, start=1):
         st.write(f"**Q{idx}: {question['question']}**")
-        options = question['options']
-        user_answer = st.radio(f"Select an answer for question {idx}", options, key=f"q{idx}")
-        st.session_state.user_answers.append({
-            "question": question['question'],
-            "user_answer": user_answer,
-            "correct_answer": question['answer'],
-            "explanation": question['explanation']
-        })
+        if question['type'] == "single_select":
+            options = question['options']
+            user_answers[idx] = st.radio(f"Select one answer for Q{idx}:", options)
+        elif question['type'] == "true_false":
+            options = ["True", "False"]
+            user_answers[idx] = st.radio(f"Select True or False for Q{idx}:", options)
+        elif question['type'] == "multiple_select":
+            options = question['options']
+            user_answers[idx] = st.multiselect(f"Select one or more answers for Q{idx}:", options)
+        elif question['type'] == "numeric":
+            user_answers[idx] = st.number_input(f"Enter a numeric answer for Q{idx}:", value=0)
+        elif question['type'] == "theory":
+            user_answers[idx] = st.text_area(f"Write your answer for Q{idx}:")
 
-    if st.button("Submit Answers"):
-        st.write("### Results")
-        score = 0
-        total = len(st.session_state.questions)
+    if st.button("Submit Quiz"):
+        with st.spinner("Grading quiz..."):
+            # Generate quiz results
+            correct_answers = 0
+            results = []
 
-        for idx, answer in enumerate(st.session_state.user_answers, start=1):
-            if answer['user_answer'] == answer['correct_answer']:
-                score += 1
-                st.write(f"**Q{idx}: Correct!**")
-            else:
-                st.write(f"**Q{idx}: Incorrect.**")
-            st.write(f"Your Answer: {answer['user_answer']}")
-            st.write(f"Correct Answer: {answer['correct_answer']}")
-            st.write(f"Explanation: {answer['explanation']}")
-            st.write("")
+            for idx, question in enumerate(st.session_state.questions, start=1):
+                correct_answer = question['answer']
+                user_answer = user_answers.get(idx)
 
-        st.write(f"**Your Score: {score}/{total}**")
+                if isinstance(correct_answer, list):
+                    correct = set(user_answer) == set(correct_answer)
+                else:
+                    correct = user_answer == correct_answer
 
-        # Generate and display options for downloading or sharing the quiz
-        option = st.selectbox("Choose an option", ["Download as PDF", "Share Quiz"])
-        
-        if option == "Download as PDF":
-            question_pdf = generate_question_paper_pdf(st.session_state.questions, school_name, exam_title, exam_time, total_marks, subject)
-            question_pdf_output = f"question_paper_{subject.replace(' ', '_')}.pdf"
-            question_pdf.output(question_pdf_output)
-            
-            with open(question_pdf_output, "rb") as f:
-                st.download_button("Download Question Paper", f, file_name=question_pdf_output)
+                result = {
+                    "question": question['question'],
+                    "user_answer": user_answer,
+                    "correct_answer": correct_answer,
+                    "explanation": question['explanation'],
+                    "correct": correct
+                }
+                results.append(result)
 
-            answer_pdf = generate_answer_key_pdf(st.session_state.questions, school_name, exam_title, exam_time, total_marks, subject)
-            answer_pdf_output = f"answer_key_{subject.replace(' ', '_')}.pdf"
-            answer_pdf.output(answer_pdf_output)
-            
-            with open(answer_pdf_output, "rb") as f:
-                st.download_button("Download Answer Key", f, file_name=answer_pdf_output)
+                if correct:
+                    correct_answers += 1
 
-        elif option == "Share Quiz":
-            st.text("Sharing functionality is not yet implemented.")
+            score = (correct_answers / len(st.session_state.questions)) * 100
+            st.success(f"You scored {score}%")
+
+            # Display results with correct answers, explanations, user answers, and correct/incorrect status
+            st.header("Results")
+            for result in results:
+                st.write(f"**Question:** {result['question']}")
+                st.write(f"**Your Answer:** {result['user_answer']}")
+                st.write(f"**Correct Answer:** {result['correct_answer']}")
+                st.write(f"**Explanation:** {result['explanation']}")
+                st.write(f"**Status:** {'Correct' if result['correct'] else 'Incorrect'}")
+                st.write("---")
+
+            # Generate PDF with questions
+            pdf = FPDF()
+            pdf.add_page()
+            pdf.set_font("Arial", size=12)
+            pdf.cell(200, 10, txt="Quiz Questions", ln=True, align="C")
+
+            for idx, question in enumerate(st.session_state.questions, start=1):
+                pdf.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
+                if question['type'] in ["single_select", "multiple_select", "true_false"]:
+                    for option in question['options']:
+                        pdf.cell(0, 10, txt=f"- {option}", ln=True)
+                pdf.cell(0, 10, txt="", ln=True)  # Add an empty line between questions
+
+            pdf_output = pdf.output(dest='S').encode('latin1')
+            st.download_button(
+                label="Download Questions PDF",
+                data=pdf_output,
+                file_name="quiz_questions.pdf",
+                mime="application/pdf",
+            )
+
+            # Generate PDF with questions and answers
+            pdf_answers = FPDF()
+            pdf_answers.add_page()
+            pdf_answers.set_font("Arial", size=12)
+            pdf_answers.cell(200, 10, txt="Quiz Questions with Answers", ln=True, align="C")
+
+            for idx, question in enumerate(st.session_state.questions, start=1):
+                pdf_answers.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
+                if question['type'] in ["single_select", "multiple_select", "true_false"]:
+                    for option in question['options']:
+                        pdf_answers.cell(0, 10, txt=f"- {option}", ln=True)
+                pdf_answers.cell(0, 10, txt=f"Answer: {question['answer']}", ln=True)
+                pdf_answers.cell(0, 10, txt=f"Explanation: {question['explanation']}", ln=True)
+                pdf_answers.cell(0, 10, txt="", ln=True)  # Add an empty line between questions
+
+            pdf_answers_output = pdf_answers.output(dest='S').encode('latin1')
+            st.download_button(
+                label="Download Questions with Answers PDF",
+                data=pdf_answers_output,
+                file_name="quiz_questions_with_answers.pdf",
+                mime="application/pdf",
+            )
