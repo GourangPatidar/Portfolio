@@ -68,7 +68,7 @@ def get_video_transcript(video_id):
         return None
 
 # Initialize OpenAI language model
-llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-4")
+llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-3.5-turbo")
 
 # Define the prompt template for generating quiz questions
 template = """
