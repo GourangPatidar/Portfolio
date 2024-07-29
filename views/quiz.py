@@ -321,7 +321,8 @@ if 'questions' in st.session_state:
                     file_name="quiz_questions_with_answers.pdf",
                     mime="application/pdf",
                 )
-            if level=="share":
+            elif level=="share":
                 st.write("this functionality is not implemented yet !")
+                st.button("share quiz with a link")
             
     
