@@ -139,7 +139,6 @@ school_name = st.sidebar.text_input("School/College Name", "Example School")
 exam_title = st.sidebar.text_input("Exam Title", "Mid-Term Examination")
 exam_time = st.sidebar.text_input("Time Allowed", "2 hours")
 total_marks = st.sidebar.text_input("Total Marks", "50")
-study = st.sidebar.text_input("class", "1st semester")
 
 subject = ""
 
@@ -179,7 +178,7 @@ language = st.selectbox("Language", ["English", "Spanish", "French", "German", "
 question_types = st.multiselect("Question Types", ["single_select", "true_false", "numeric", "theory", "multiple_select"], default=["single_select"])
 
 # Function to generate question paper PDF with header
-def generate_question_paper_pdf(questions, school_name, exam_title, exam_time, total_marks, subject ,study):
+def generate_question_paper_pdf(questions, school_name, exam_title, exam_time, total_marks, subject):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", 'B', size=12)
@@ -192,7 +191,7 @@ def generate_question_paper_pdf(questions, school_name, exam_title, exam_time, t
     pdf.set_font("Arial", size=12)
 
     # Add header information (smaller text)
-    pdf.cell(0, 10, txt=f"STD -:{study}", ln=True, align="L")
+    pdf.cell(0, 10, txt=f"STD - VII", ln=True, align="L")
     pdf.cell(0, 10, txt=f"TIME : {exam_time}", ln=True, align="C")
     pdf.cell(0, 10, txt=f"MAXIMUM MARKS {total_marks}", ln=True, align="R")
     pdf.cell(0, 10, txt="", ln=True)  # Add an empty line after header
@@ -204,9 +203,7 @@ def generate_question_paper_pdf(questions, school_name, exam_title, exam_time, t
         pdf.set_font("Arial", size=12)
         if question['type'] in ["single_select", "multiple_select", "true_false"]:
             for option in question['options']:
-                pdf.cell(0, 10, txt=f"- {option}", ln=True)
-        pdf.cell(0, 10, txt=f"Answer: {question['answer']}", ln=True)
-        pdf.cell(0, 10, txt=f"Explanation: {question['explanation']}", ln=True)
+                pdf.cell(0, 10, txt=f" - {option}", ln=True)
         pdf.cell(0, 10, txt="", ln=True)  # Add a space between questions
 
     return pdf
@@ -214,12 +211,13 @@ def generate_question_paper_pdf(questions, school_name, exam_title, exam_time, t
 # Streamlit buttons for generating quiz and downloading PDFs
 if st.button("Generate Quiz"):
     if subject:
-        question_data = llm_chain.run(num_questions=num_questions, language=language, subject=subject, schooling_level=schooling_level, level=level, question_types=question_types)
+        with st.spinner("Generating quiz..."):
+            question_data = llm_chain.run(num_questions=num_questions, language=language, subject=subject, schooling_level=schooling_level, level=level, question_types=question_types)
         try:
             questions = json.loads(question_data)
             st.success("Quiz generated successfully!")
             st.write(questions)
-            
+
             # Generate and display options for downloading or sharing the quiz
             option = st.selectbox("Choose an option", ["Download as PDF", "Share Quiz"])
             
@@ -249,7 +247,7 @@ if st.button("Generate Quiz"):
                 
                 with open(answer_pdf_output, "rb") as f:
                     st.download_button("Download Answer Key", f, file_name=answer_pdf_output)
-                    
+
             elif option == "Share Quiz":
                 st.text("Sharing functionality is not yet implemented.")
                 
