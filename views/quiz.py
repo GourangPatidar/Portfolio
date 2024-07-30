@@ -277,7 +277,7 @@ if 'questions' in st.session_state:
                 st.write("---")
 
             # Generate PDF with questions
-    download = st.selectbox("Download/share", ["PDF", "share"], default=None)
+    download = st.selectbox("Download/share", ["PDF", "share"], placeholder="Choose an option")
     if download=="PDF":
 
         st.sidebar.header("Question Paper Details")
