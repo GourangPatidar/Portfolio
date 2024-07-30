@@ -295,14 +295,14 @@ if 'questions' in st.session_state:
         pdf.cell(0, 10, txt=school_name, ln=True, align="C")
         pdf.cell(0, 10, txt=exam_title, ln=True, align="C")
         pdf.cell(0, 10, txt=f"Subject : {topic}", ln=True, align="C")
-        pdf.cell(0, 10, txt="", ln=True)  # Add an empty line after header
         pdf.set_font("Arial","B", size=12)
 
         # Add header information (smaller text)
-        pdf.cell(0, 10, txt=school_name, ln=True, align="C")
-        pdf.cell(0, 10, txt=exam_title, ln=True, align="C")
-        pdf.cell(0, 10, txt=f"Subject : {topic}", ln=True, align="C")
-        pdf.cell(0, 10, txt="------------------------------------------------------------------------------------------------------------------------------", ln=True)  # Add an empty line after header
+        # Add header information (smaller text) on the same line
+        
+        pdf.cell(0, 10, txt=f"TIME : {exam_time}", ln=False, align="L")
+        pdf.cell(0, 10, txt=f"MAXIMUM MARKS {total_marks}", ln=True, align="R")
+        pdf.cell(0, 10, txt="------------------------------------------------------------------------------------------------------------------------------", ln=True)    
 
         for idx, question in enumerate(st.session_state.questions, start=1):
             pdf.set_font("Arial", 'B', size=12)
@@ -325,29 +325,28 @@ if 'questions' in st.session_state:
         pdf_answers = FPDF()
         pdf_answers.add_page()
         pdf_answers.set_font("Arial","BU", size=16)
-        pdf_answers.cell(200, 10, txt="Questions with Answers", ln=True, align="C")
 
         
-
+        pdf_answers.cell(200, 10, txt="Questions with Answers", ln=True, align="C")
         pdf_answers.cell(0, 10, txt=school_name, ln=True, align="C")
         pdf_answers.cell(0, 10, txt=exam_title, ln=True, align="C")
         pdf_answers.cell(0, 10, txt=f"Subject : {topic}", ln=True, align="C")
-        pdf_answers.cell(0, 10, txt="------------------------------------------------------------------------------------------------------------------------------", ln=True)  # Add an empty line after header
         pdf_answers.set_font("Arial","B", size=12)
+
 
         # Add header information (smaller text)
         # Add header information (smaller text) on the same line
-        pdf_answers.cell(0, 10, txt="STD - VII", ln=False, align="L")
-        pdf_answers.cell(0, 10, txt=f"TIME : {exam_time}", ln=False, align="C")
+        
+        pdf_answers.cell(0, 10, txt=f"TIME : {exam_time}", ln=False, align="L")
         pdf_answers.cell(0, 10, txt=f"MAXIMUM MARKS {total_marks}", ln=True, align="R")
-        pdf_answers.cell(0, 10, txt="", ln=True)  # Add an empty line after the header
-
+        pdf_answers.cell(0, 10, txt="------------------------------------------------------------------------------------------------------------------------------", ln=True)  # Add an empty line after header
+        
 
 
         for idx, question in enumerate(st.session_state.questions, start=1):
-            pdf.set_font("Arial", 'B', size=12)
+            pdf_answers.set_font("Arial", 'B', size=12)
             pdf_answers.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
-            pdf.set_font("Arial", size=12)
+            pdf_answers.set_font("Arial", size=12)
             if question['type'] in ["single_select", "multiple_select", "true_false"]:
                 for option in question['options']:
                     pdf_answers.cell(0, 10, txt=f"- {option}", ln=True)
