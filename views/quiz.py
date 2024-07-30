@@ -67,6 +67,10 @@ def get_video_transcript(video_id):
         print(f"Error fetching transcript: {str(e)}")
         return None
 
+def sanitize_text(text):
+            return text.encode('latin1', 'replace').decode('latin1')
+
+
 # Initialize OpenAI language model
 llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-4o")
 
@@ -307,14 +311,16 @@ if 'questions' in st.session_state:
         pdf.cell(0, 10, txt="", ln=True)
         for idx, question in enumerate(st.session_state.questions, start=1):
             pdf.set_font("Arial", 'B', size=12)
-            pdf.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
+            pdf.cell(0, 10, txt=sanitize_text(f"Q{idx}: {question['question']}"), ln=True)
+            
             pdf.set_font("Arial", size=12)
             if question['type'] in ["single_select", "multiple_select", "true_false"]:
                 for option in question['options']:
-                    pdf.cell(0, 10, txt=f"- {option}", ln=True)
+                    pdf.cell(0, 10, txt=sanitize_text(f"- {option}"), ln=True)
+                    
             pdf.cell(0, 10, txt="", ln=True)  # Add an empty line between questions
 
-        pdf_output = pdf.output(dest='S').encode('utf-8')
+        pdf_output = pdf.output(dest='S').encode('latin1')
         st.download_button(
             label="Download Questions PDF",
             data=pdf_output,
@@ -347,16 +353,16 @@ if 'questions' in st.session_state:
 
         for idx, question in enumerate(st.session_state.questions, start=1):
             pdf_answers.set_font("Arial", 'B', size=12)
-            pdf_answers.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
+            pdf_answers.cell(0, 10, txt=sanitize_text(f"Q{idx}: {question['question']}"), ln=True)
             pdf_answers.set_font("Arial", size=12)
             if question['type'] in ["single_select", "multiple_select", "true_false"]:
                 for option in question['options']:
-                    pdf_answers.cell(0, 10, txt=f"- {option}", ln=True)
+                    pdf_answers.cell(0, 10, txt=sanitize_text(f"- {option}"), ln=True)
             pdf_answers.cell(0, 10, txt=f"Answer: {question['answer']}", ln=True)
             pdf_answers.cell(0, 10, txt=f"Explanation: {question['explanation']}", ln=True)
             pdf_answers.cell(0, 10, txt="", ln=True)  # Add an empty line between questions
 
-        pdf_answers_output = pdf_answers.output(dest='S').encode('utf-8')
+        pdf_answers_output = pdf_answers.output(dest='S').encode('latin1')
         st.download_button(
             label="Download Questions with Answers PDF",
             data=pdf_answers_output,
