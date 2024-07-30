@@ -358,8 +358,8 @@ if 'questions' in st.session_state:
             if question['type'] in ["single_select", "multiple_select", "true_false"]:
                 for option in question['options']:
                     pdf_answers.cell(0, 10, txt=sanitize_text(f"- {option}"), ln=True)
-            pdf_answers.cell(0, 10, txt=f"Answer: {question['answer']}", ln=True)
-            pdf_answers.cell(0, 10, txt=f"Explanation: {question['explanation']}", ln=True)
+            pdf_answers.cell(0, 10, txt=sanitize_text(f"Answer: {question['answer']}"), ln=True)
+            pdf_answers.cell(0, 10, txt=sanitize_text(f"Explanation: {question['explanation']}"), ln=True)
             pdf_answers.cell(0, 10, txt="", ln=True)  # Add an empty line between questions
 
         pdf_answers_output = pdf_answers.output(dest='S').encode('latin1')
