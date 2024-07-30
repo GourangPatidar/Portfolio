@@ -295,6 +295,7 @@ if 'questions' in st.session_state:
         pdf.cell(0, 10, txt=school_name, ln=True, align="C")
         pdf.cell(0, 10, txt=exam_title, ln=True, align="C")
         pdf.cell(0, 10, txt=f"Subject : {topic}", ln=True, align="C")
+        pdf.cell(0,10, text="")
         pdf.set_font("Arial","B", size=12)
 
         # Add header information (smaller text)
@@ -326,11 +327,12 @@ if 'questions' in st.session_state:
         pdf_answers.add_page()
         pdf_answers.set_font("Arial","BU", size=16)
 
-        
+
         pdf_answers.cell(200, 10, txt="Questions with Answers", ln=True, align="C")
         pdf_answers.cell(0, 10, txt=school_name, ln=True, align="C")
         pdf_answers.cell(0, 10, txt=exam_title, ln=True, align="C")
         pdf_answers.cell(0, 10, txt=f"Subject : {topic}", ln=True, align="C")
+        pdf_answers.cell(0, 10 , text="")
         pdf_answers.set_font("Arial","B", size=12)
 
 
