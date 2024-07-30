@@ -303,8 +303,8 @@ if 'questions' in st.session_state:
         
         pdf.cell(0, 10, txt=f"TIME : {exam_time}", ln=False, align="L")
         pdf.cell(0, 10, txt=f"MAXIMUM MARKS {total_marks}", ln=True, align="R")
-        pdf.cell(0, 10, txt="------------------------------------------------------------------------------------------------------------------------------", ln=True)    
-
+        pdf.cell(0, 10, txt="--------------------------------------------------------------------------------------------------------------------------------------", ln=True)    
+        pdf.cell(0, 10, txt="", ln=True)
         for idx, question in enumerate(st.session_state.questions, start=1):
             pdf.set_font("Arial", 'B', size=12)
             pdf.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
@@ -341,8 +341,8 @@ if 'questions' in st.session_state:
         
         pdf_answers.cell(0, 10, txt=f"TIME : {exam_time}", ln=False, align="L")
         pdf_answers.cell(0, 10, txt=f"MAXIMUM MARKS {total_marks}", ln=True, align="R")
-        pdf_answers.cell(0, 10, txt="------------------------------------------------------------------------------------------------------------------------------", ln=True)  # Add an empty line after header
-        
+        pdf_answers.cell(0, 10, txt="--------------------------------------------------------------------------------------------------------------------------------------", ln=True)  # Add an empty line after header
+        pdf_answers.cell(0, 10 , txt="" , ln=True)
 
 
         for idx, question in enumerate(st.session_state.questions, start=1):
