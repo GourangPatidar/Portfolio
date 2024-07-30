@@ -277,52 +277,52 @@ if 'questions' in st.session_state:
                 st.write("---")
 
             # Generate PDF with questions
-        download = st.selectbox("Download/share", ["PDF", "share"])
-        if download=="PDF":
-            pdf = FPDF()
-            pdf.add_page()
-            pdf.set_font("Arial", size=12)
-            pdf.cell(200, 10, txt="Quiz Questions", ln=True, align="C")
+    download = st.selectbox("Download/share", ["PDF", "share"])
+    if download=="PDF":
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=12)
+        pdf.cell(200, 10, txt="Quiz Questions", ln=True, align="C")
 
-            for idx, question in enumerate(st.session_state.questions, start=1):
-                pdf.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
-                if question['type'] in ["single_select", "multiple_select", "true_false"]:
-                    for option in question['options']:
-                        pdf.cell(0, 10, txt=f"- {option}", ln=True)
-                pdf.cell(0, 10, txt="", ln=True)  # Add an empty line between questions
+        for idx, question in enumerate(st.session_state.questions, start=1):
+            pdf.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
+            if question['type'] in ["single_select", "multiple_select", "true_false"]:
+                for option in question['options']:
+                    pdf.cell(0, 10, txt=f"- {option}", ln=True)
+            pdf.cell(0, 10, txt="", ln=True)  # Add an empty line between questions
 
-            pdf_output = pdf.output(dest='S').encode('latin1')
-            st.download_button(
-                label="Download Questions PDF",
-                data=pdf_output,
-                file_name="quiz_questions.pdf",
-                mime="application/pdf",
-            )
+        pdf_output = pdf.output(dest='S').encode('latin1')
+        st.download_button(
+            label="Download Questions PDF",
+            data=pdf_output,
+            file_name="quiz_questions.pdf",
+            mime="application/pdf",
+        )
 
-            # Generate PDF with questions and answers
-            pdf_answers = FPDF()
-            pdf_answers.add_page()
-            pdf_answers.set_font("Arial", size=12)
-            pdf_answers.cell(200, 10, txt="Quiz Questions with Answers", ln=True, align="C")
+        # Generate PDF with questions and answers
+        pdf_answers = FPDF()
+        pdf_answers.add_page()
+        pdf_answers.set_font("Arial", size=12)
+        pdf_answers.cell(200, 10, txt="Quiz Questions with Answers", ln=True, align="C")
 
-            for idx, question in enumerate(st.session_state.questions, start=1):
-                pdf_answers.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
-                if question['type'] in ["single_select", "multiple_select", "true_false"]:
-                    for option in question['options']:
-                        pdf_answers.cell(0, 10, txt=f"- {option}", ln=True)
-                pdf_answers.cell(0, 10, txt=f"Answer: {question['answer']}", ln=True)
-                pdf_answers.cell(0, 10, txt=f"Explanation: {question['explanation']}", ln=True)
-                pdf_answers.cell(0, 10, txt="", ln=True)  # Add an empty line between questions
+        for idx, question in enumerate(st.session_state.questions, start=1):
+            pdf_answers.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
+            if question['type'] in ["single_select", "multiple_select", "true_false"]:
+                for option in question['options']:
+                    pdf_answers.cell(0, 10, txt=f"- {option}", ln=True)
+            pdf_answers.cell(0, 10, txt=f"Answer: {question['answer']}", ln=True)
+            pdf_answers.cell(0, 10, txt=f"Explanation: {question['explanation']}", ln=True)
+            pdf_answers.cell(0, 10, txt="", ln=True)  # Add an empty line between questions
 
-            pdf_answers_output = pdf_answers.output(dest='S').encode('latin1')
-            st.download_button(
-                label="Download Questions with Answers PDF",
-                data=pdf_answers_output,
-                file_name="quiz_questions_with_answers.pdf",
-                mime="application/pdf",
-            )
-        elif download=="share":
-            st.write("this functionality is not implemented yet !")
-            st.button("share quiz with a link")
-        
-    
+        pdf_answers_output = pdf_answers.output(dest='S').encode('latin1')
+        st.download_button(
+            label="Download Questions with Answers PDF",
+            data=pdf_answers_output,
+            file_name="quiz_questions_with_answers.pdf",
+            mime="application/pdf",
+        )
+    elif download=="share":
+        st.write("this functionality is not implemented yet !")
+        st.button("share quiz with a link")
+
+
