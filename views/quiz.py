@@ -277,12 +277,31 @@ if 'questions' in st.session_state:
                 st.write("---")
 
             # Generate PDF with questions
-    download = st.selectbox("Download/share", ["PDF", "share"])
+    download = st.selectbox("Download/share", ["PDF", "share"], deflaut=None)
     if download=="PDF":
+
+        st.sidebar.header("Question Paper Details")
+        school_name = st.sidebar.text_input("School/College Name", "Example School")
+        exam_title = st.sidebar.text_input("Exam Title", "Mid-Term Examination")
+        exam_time = st.sidebar.text_input("Time Allowed", "2 hours")
+        total_marks = st.sidebar.text_input("Total Marks", "50")
+
         pdf = FPDF()
         pdf.add_page()
         pdf.set_font("Arial", size=12)
         pdf.cell(200, 10, txt="Quiz Questions", ln=True, align="C")
+
+        pdf.cell(0, 10, txt=school_name, ln=True, align="C")
+        pdf.cell(0, 10, txt=exam_title, ln=True, align="C")
+        pdf.cell(0, 10, txt=subject, ln=True, align="C")
+        pdf.cell(0, 10, txt="", ln=True)  # Add an empty line after header
+        pdf.set_font("Arial", size=12)
+
+        # Add header information (smaller text)
+        pdf.cell(0, 10, txt=f"STD - VII", ln=True, align="L")
+        pdf.cell(0, 10, txt=f"TIME : {exam_time}", ln=True, align="C")
+        pdf.cell(0, 10, txt=f"MAXIMUM MARKS {total_marks}", ln=True, align="R")
+        pdf.cell(0, 10, txt="", ln=True)  # Add an empty line after header
 
         for idx, question in enumerate(st.session_state.questions, start=1):
             pdf.cell(0, 10, txt=f"Q{idx}: {question['question']}", ln=True)
@@ -305,23 +324,19 @@ if 'questions' in st.session_state:
         pdf_answers.set_font("Arial", size=12)
         pdf_answers.cell(200, 10, txt="Quiz Questions with Answers", ln=True, align="C")
 
-        st.sidebar.header("Question Paper Details")
-        school_name = st.sidebar.text_input("School/College Name", "Example School")
-        exam_title = st.sidebar.text_input("Exam Title", "Mid-Term Examination")
-        exam_time = st.sidebar.text_input("Time Allowed", "2 hours")
-        total_marks = st.sidebar.text_input("Total Marks", "50")
+        
 
-        pdf.cell(0, 10, txt=school_name, ln=True, align="C")
-        pdf.cell(0, 10, txt=exam_title, ln=True, align="C")
-        pdf.cell(0, 10, txt=subject, ln=True, align="C")
-        pdf.cell(0, 10, txt="------------------------------------------------------------------------------", ln=True)  # Add an empty line after header
-        pdf.set_font("Arial", size=12)
+        pdf_answers.cell(0, 10, txt=school_name, ln=True, align="C")
+        pdf_answers.cell(0, 10, txt=exam_title, ln=True, align="C")
+        pdf_answers.cell(0, 10, txt=subject, ln=True, align="C")
+        pdf_answers.cell(0, 10, txt="------------------------------------------------------------------------------", ln=True)  # Add an empty line after header
+        pdf_answers.set_font("Arial", size=12)
 
         # Add header information (smaller text)
-        pdf.cell(0, 10, txt=f"STD - VII", ln=True, align="L")
-        pdf.cell(0, 10, txt=f"TIME : {exam_time}", ln=True, align="C")
-        pdf.cell(0, 10, txt=f"MAXIMUM MARKS {total_marks}", ln=True, align="R")
-        pdf.cell(0, 10, txt="", ln=True)  # Add an empty line after header
+        pdf_answers.cell(0, 10, txt=f"STD - VII", ln=True, align="L")
+        pdf_answers.cell(0, 10, txt=f"TIME : {exam_time}", ln=True, align="C")
+        pdf_answers.cell(0, 10, txt=f"MAXIMUM MARKS {total_marks}", ln=True, align="R")
+        pdf_answers.cell(0, 10, txt="", ln=True)  # Add an empty line after header
 
 
         for idx, question in enumerate(st.session_state.questions, start=1):
