@@ -77,28 +77,29 @@ if youtube_link:
         st.warning("Please enter a valid YouTube video link.")
 
 if st.button("Get Detailed Notes"):
-    if youtube_link:
-        video_id = extract_video_id(youtube_link)
-        if video_id:
-            transcript_text = get_video_transcript(video_id)
-            if transcript_text:
-                # English and Hindi prompts for summary
-                prompt_english = """Hello, I am your YouTube video summarizer. I will take the transcript text and summarize the entire video, providing an important summary within {word_count} words. Please provide the summary of the text given here: """
-                prompt_hindi = """नमस्कार, मैं आपका YouTube वीडियो सारांशकर्ता हूं। मैं ट्रांसक्रिप्ट पाठ को लेकर वीडियो का सारांश दूंगा, {word_count} शब्दों के भीतर महत्वपूर्ण सारांश प्रदान करें। कृपया दिए गए पाठ का सारांश प्रदान करें: """
+    with st.spinner("getting...."):
+        if youtube_link:
+            video_id = extract_video_id(youtube_link)
+            if video_id:
+                transcript_text = get_video_transcript(video_id)
+                if transcript_text:
+                    # English and Hindi prompts for summary
+                    prompt_english = """Hello, I am your YouTube video summarizer. I will take the transcript text and summarize the entire video, providing an important summary within {word_count} words. Please provide the summary of the text given here: """
+                    prompt_hindi = """नमस्कार, मैं आपका YouTube वीडियो सारांशकर्ता हूं। मैं ट्रांसक्रिप्ट पाठ को लेकर वीडियो का सारांश दूंगा, {word_count} शब्दों के भीतर महत्वपूर्ण सारांश प्रदान करें। कृपया दिए गए पाठ का सारांश प्रदान करें: """
 
-                if language == "English":
-                    summary = generate_gemini_content(transcript_text, prompt_english, language, word_count)
-                elif language == "Hindi":
-                    summary = generate_gemini_content(transcript_text, prompt_hindi, language, word_count)
-                
-                if summary:
-                    st.markdown("## Detailed Notes:")
-                    st.write(summary)
+                    if language == "English":
+                        summary = generate_gemini_content(transcript_text, prompt_english, language, word_count)
+                    elif language == "Hindi":
+                        summary = generate_gemini_content(transcript_text, prompt_hindi, language, word_count)
+                    
+                    if summary:
+                        st.markdown("## Detailed Notes:")
+                        st.write(summary)
+                    else:
+                        st.warning("Failed to generate detailed notes.")
                 else:
-                    st.warning("Failed to generate detailed notes.")
+                    st.warning("Failed to fetch transcript.")
             else:
-                st.warning("Failed to fetch transcript.")
+                st.warning("Invalid YouTube URL. Please enter a valid URL.")
         else:
-            st.warning("Invalid YouTube URL. Please enter a valid URL.")
-    else:
-        st.warning("Please enter a YouTube URL.")
+            st.warning("Please enter a YouTube URL.")

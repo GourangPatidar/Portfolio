@@ -74,6 +74,7 @@ astra_vector_index = VectorStoreIndexWrapper(vectorstore=astra_vector_store)
 question = st.text_input("Enter your question here:")
 
 if st.button("Get Answer"):
+    with st.spinner("Generating Answer..."):
         if question:
             answer = answer = astra_vector_index.query(question, llm=llm).strip()
             st.success(answer)
