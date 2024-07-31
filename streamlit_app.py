@@ -30,11 +30,7 @@ project_4_page = st.Page(
     icon=":material/bar_chart:",
 )
 
-project_5_page = st.Page(
-    "views/search.py",
-    title="Search",
-    icon=":material/thumb_up:",
-)
+
 
 project_6_page = st.Page(
     "views/quiz.py",
@@ -52,7 +48,7 @@ project_6_page = st.Page(
 pg = st.navigation(
     {
         "INFO": [about_page],
-        "PROJECTS": [project_6_page, project_1_page, project_2_page , project_3_page , project_4_page , project_5_page],
+        "PROJECTS": [project_6_page, project_1_page, project_2_page , project_3_page , project_4_page ],
     }
 )
 
