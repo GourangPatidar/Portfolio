@@ -112,7 +112,7 @@ st.write('\n')
 st.subheader("Work History" , divider="rainbow")
 
 # --- JOB 1
-st.write("🚧", "**Python Mentor | Codeyoung**")
+st.write("🚧", "**Python Mentor | Codeyoungg**")
 st.write("10/2023 -4-2024")
 st.write(
     """
