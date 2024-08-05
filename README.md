@@ -84,6 +84,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - OpenAI for the ChatGPT API.
 - Cassandra for the efficient data storage solutions.
 
----
 
-Feel free to adjust the content as per your specific requirements.
