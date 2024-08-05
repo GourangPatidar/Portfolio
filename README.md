@@ -35,7 +35,7 @@ Follow these instructions to get a copy of the project up and running on your lo
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/gen-ai-products-collection.git
+   git clone https://github.com/GourangPatidar/Portfolio.git
    cd gen-ai-products-collection
    ```
 
