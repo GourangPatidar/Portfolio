@@ -1,4 +1,3 @@
-Here's a draft for your GitHub README file based on the provided content:
 
 ---
 
@@ -47,17 +46,17 @@ Follow these instructions to get a copy of the project up and running on your lo
 
 3. **Set up Cassandra DB**
    - Ensure your Cassandra DB is up and running.
-   - Configure the connection settings in `config.py`.
+   
 
 4. **Set up API Keys**
    - Obtain your OpenAI API key.
-   - Add your API key to `config.py`.
+   - Add your API key to secrets.toml
 
 ### Running the Application
 
 Run the Streamlit app using the following command:
 ```bash
-streamlit run app.py
+streamlit run streamlit_app.py
 ```
 
 ## Usage
