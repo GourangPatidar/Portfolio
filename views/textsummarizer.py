@@ -4,6 +4,7 @@ from langchain.docstore.document import Document
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.chains.summarize import load_summarize_chain
 
+st.header("Text Summarizer" , divider="rainbow")
 
 css_file = "./styles/main.css"
 with open(css_file) as f:
