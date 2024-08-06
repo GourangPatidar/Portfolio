@@ -22,7 +22,7 @@ PAGE_TITLE = "Digital CV | GOURANG PATIDAR"
 PAGE_ICON = ":wave:"
 NAME = "GOURANG PATIDAR"
 DESCRIPTION = """
-Building TheQuicaAI.com \n
+Building TheQuickAI.com \n
 Ex-ML Engineer at Ineuron.ai\n
 JEC'25
 """
@@ -112,7 +112,7 @@ st.write('\n')
 st.subheader("Work History" , divider="rainbow")
 
 # --- JOB 1
-st.write("🚧", "**Founder | TheQuickAI.com**")
+st.write("🚧", "**Founder | {"TheQuickAI.com":"https://the-quick-ai.vercel.app/ai-quiz-generator"}**")
 st.write("07/2024-Present")
 st.write(
     """
