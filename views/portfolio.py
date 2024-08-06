@@ -131,7 +131,7 @@ st.write(
 
 
 # --- JOB 1
-st.write("🚧", "**Python Mentor | Codeyoungg**")
+st.write("🚧", "**Python Mentor | Codeyoung**")
 st.write("10/2023 -4/2024")
 st.write(
     """
