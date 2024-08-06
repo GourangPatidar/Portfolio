@@ -111,8 +111,8 @@ st.write(
 st.write('\n')
 st.subheader("Work History" , divider="rainbow")
 
-# --- JOB 1
-st.write("🚧", "**Founder | {"TheQuickAI.com":"https://the-quick-ai.vercel.app/ai-quiz-generator"}**")
+# --- JOB 
+st.link_button(""🚧", "**Founder | TheQuickAI.com**"", "https://the-quick-ai.vercel.app/ai-quiz-generator")
 st.write("07/2024-Present")
 st.write(
     """
