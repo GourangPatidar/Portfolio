@@ -14,7 +14,7 @@ def show_contact_form():
 # --- PATH SETTINGS ---
 current_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
 css_file = "./styles/main.css"
-resume_file = "./assets/Gourang Patidar Resume.pdf"
+resume_file = "./assets/Resume.pdf"
 profile_pic = "./assets/profile Picture.jpg"
 
 # --- GENERAL SETTINGS ---
