@@ -115,7 +115,7 @@ st.subheader("Work History" , divider="rainbow")
 st.markdown(
     """
     <a href="https://the-quick-ai.vercel.app/ai-quiz-generator" target="_blank">
-        <button style="padding: 10px 20px; font-size: 16px;">🚧 Founder | TheQuickAI.com</button>
+        <button >🚧 Founder | TheQuickAI.com</button>
     </a>
     """,
     unsafe_allow_html=True
