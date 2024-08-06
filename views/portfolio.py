@@ -22,8 +22,8 @@ PAGE_TITLE = "Digital CV | GOURANG PATIDAR"
 PAGE_ICON = ":wave:"
 NAME = "GOURANG PATIDAR"
 DESCRIPTION = """
-EX-Data Analyst intern @ineuron.ai\n
-Python mentor @codeyoung\n
+Building TheQuicaAI.com \n
+Ex-ML Engineer at Ineuron.ai\n
 JEC'25
 """
 EMAIL = "gourangpatidar2003@gmail.com"
@@ -112,8 +112,20 @@ st.write('\n')
 st.subheader("Work History" , divider="rainbow")
 
 # --- JOB 1
+st.write("🚧", "**Founder | TheQuickAI.com**")
+st.write("07/2024-Present")
+st.write(
+    """
+- ► Launched a Generative AI SaaS for creating quizzes from four input types (Text , Video url , Blog url , Pdf) , increasing user engagement and content generation efficiency by 40%.
+- ► Architected a Cassandra DB solution for the Quiz on Hostinger VPS, achieving 99.9% uptime and enhancing reliability for 1,500+ monthly interactions.
+
+"""
+)
+
+
+# --- JOB 1
 st.write("🚧", "**Python Mentor | Codeyoungg**")
-st.write("10/2023 -4-2024")
+st.write("10/2023 -4/2024")
 st.write(
     """
 - ► Used PowerBI and SQL to redeﬁne and track KPIs surrounding marketing initiatives, and supplied recommendations to boost landing page conversion rate by 38%
@@ -125,24 +137,25 @@ st.write(
 # --- JOB 2
 st.write('\n')
 st.write("🚧", "**Machine Learning Engineer | Ineuron.ai**")
-st.write("15/07/2023-15/10/2023")
+st.write("08/2023-09/2023")
 st.write(
     """
-- ► Built data models and maps to generate meaningful insights from customer data, boosting successful sales eﬀorts by 12%
-- ► Modeled targets likely to renew, and presented analysis to leadership, which led to a YoY revenue increase of $300K
-- ► Compiled, studied, and inferred large amounts of data, modeling information to drive auto policy pricing
+- ► Achieved 94% accuracy in sentiment analysis on student feedback data using NLTK.
+- ► Built predictive models using TensorFlow, reducing forecasting errors by 21%.
+- ► Conducted A/B testing on machine learning models to identify optimal model configurations, leading to an 11%
+increase in user retention.
 """
 )
 
 # --- JOB 3
 st.write('\n')
 st.write("🚧", "**Data Analyst | Ineuron.ai**")
-st.write("04/2015 - 01/2018")
+st.write("10/2022 - 12/2022")
 st.write(
     """
-- ► Devised KPIs using SQL across company website in collaboration with cross-functional teams to achieve a 120% jump in organic traﬃc
-- ► Analyzed, documented, and reported user survey results to improve customer communication processes by 18%
-- ► Collaborated with analyst team to oversee end-to-end process surrounding customers' return data
+- ► Used Python clustering methods to determine groups of states where courses were underperforming, leading to improvements that increased profit by 4%.
+- ► Assisted in developing a recommendation engine using collaborative filtering techniques, resulting in a 22% rise in user interaction with recommended listings.
+
 """
 )
 
