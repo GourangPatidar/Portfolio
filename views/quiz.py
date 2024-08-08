@@ -72,7 +72,7 @@ def sanitize_text(text):
 
 
 # Initialize OpenAI language model
-llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-4")
+llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-4o-mini")
 
 # Define the prompt template for generating quiz questions
 template = """
