@@ -166,7 +166,7 @@ elif input_type == "Video URL":
     subject = get_video_transcript(video_id)
 
 schooling_level = st.selectbox("Schooling Level", ["Primary", "Secondary", "High School", "College", "University"])
-num_questions = st.number_input("Number of Questions", min_value=1, max_value=20, step=1)
+num_questions = st.number_input("Number of Questions", min_value=1, step=1)
 level = st.selectbox("Difficulty Level", ["Easy", "Medium", "Hard", "Expert"])
 language = st.selectbox("Language", ["English", "Spanish", "French", "German", "Chinese", "Hindi"])
 
