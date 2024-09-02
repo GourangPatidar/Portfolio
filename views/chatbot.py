@@ -127,6 +127,5 @@ elif selected_option=="web":
         else:
             st.write("Please enter a search query.")
 
-    st.write("Powered by SerpApi")
-    st.write("gourang")
+ 
 
