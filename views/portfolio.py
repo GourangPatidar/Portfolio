@@ -114,8 +114,8 @@ st.subheader("Work History" , divider="rainbow")
 # --- JOB 
 st.markdown(
     """
-    <a href="https://the-quick-ai.vercel.app/ai-quiz-generator" target="_blank">
-        <button >🚧 Founder | TheQuickAI.com</button>
+    <a href="https://www.thequickai.com/" target="_blank">
+        <button >🚧 Building | TheQuickAI.com</button>
     </a>
     """,
     unsafe_allow_html=True
@@ -125,6 +125,7 @@ st.write(
     """
 - ► Launched a Generative AI SaaS for creating quizzes from four input types (Text , Video url , Blog url , Pdf) , increasing user engagement and content generation efficiency by 40%.
 - ► Architected a Cassandra DB solution for the Quiz on Hostinger VPS, achieving 99.9% uptime and enhancing reliability for 1,500+ monthly interactions.
+- ► Enabled manual and AI-generated quiz creation, facilitating competitive online assessments with features like auto-grading, and integrated teacher/student dashboards.
 
 """
 )
@@ -135,9 +136,8 @@ st.write("🚧", "**Python Mentor | Codeyoung**")
 st.write("10/2023 -4/2024")
 st.write(
     """
-- ► Used PowerBI and SQL to redeﬁne and track KPIs surrounding marketing initiatives, and supplied recommendations to boost landing page conversion rate by 38%
-- ► Led a team of 4 analysts to brainstorm potential marketing and sales improvements, and implemented A/B tests to generate 15% more client leads
-- ► Redesigned data model through iterations that improved predictions by 12%
+- ► Mentored US students in Python programming at Codeyoung, delivering comprehensive and engaging lessons tailored to their learning needs.
+- ► Demonstrated strong communication skills in explaining complex concepts clearly and concisely, contributing to the success of students in mastering Python programming.
 """
 )
 
