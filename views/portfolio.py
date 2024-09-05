@@ -90,10 +90,10 @@ st.write('\n')
 st.subheader("Skills", divider="rainbow")
 st.write(
     """
-- 📊 Data Analytics:- Numpy , PowerBi , MS-Excel ,MYSQL , Pandas ,Matplotlib and Seaborn
-- 📚 Machine Learning: Python ,Scikit-learn , AWS , AZURE ,ML Algorithms ,Statistics & Probability
-- 👩‍💻 Deep Learning: Natural Language Processing ,Computer Vision, Tensorflow , Keras , Neural Networks , Mathematics and Linear Algebra
-- 🗄️ GenAI- Langchain , Llama Index , OpenAI , Gemini Pro
+- 📊 Data Analytics:- Python, Scikit-learn, AWS, Azure, ML Algorithms, Mathematics, Linear Algebra
+- 📚 Machine Learning: NumPy,Pandas, EDA, PowerBI, MS Excel, MySQL, Matplotlib, Seaborn, Statistics & Probability
+- 👩‍💻 Deep Learning: Natural Language Processing, TensorFlow, Keras, Neural Networks, Transformers, BERT, Pytorch
+- 🗄️ GenAI- LLMs, Langchain, Llama Index, OpenAI, Gemini Pro, LangGraph, RAG, REST API, ClaudeAI
 """)
 st.write("\n")
 st.subheader("Education ", anchor=False , divider="rainbow")
