@@ -21,5 +21,6 @@ serpapi
 google-search-results
 pinecone
 pinecone-client
+boto3
 fpdf
 google-cloud-vision
