@@ -1,15 +1,11 @@
 import streamlit as st
 from openai import OpenAI
-from serpapi import GoogleSearch
 from PIL import Image
-import pytesseract
-import io
 
 st.header("SearchGPT", divider="rainbow")
 
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 openai_api_key = st.secrets["OPENAI_API_KEY"]
-api_key_serp = st.secrets["SERP_API_KEY"]
 
 css_file = "./styles/main.css"
 with open(css_file) as f:
@@ -32,10 +28,13 @@ if selected_option == "GPT":
             image = Image.open(uploaded_image)
             st.image(image, caption="Uploaded Image", use_column_width=True)
 
-            # Extract text from the image using pytesseract (OCR)
-            text = pytesseract.image_to_string(image)
-            st.write("Extracted Text from Image:")
-            st.write(text)
+            # Instead of pytesseract, use OpenAI to analyze the image
+            response = client.images.create(
+                model="dalle-mini",
+                file=uploaded_image
+            )
+            st.write("Extracted information from image:")
+            st.write(response)
 
             if "messages" not in st.session_state:
                 st.session_state.messages = []
@@ -45,12 +44,11 @@ if selected_option == "GPT":
                 with st.chat_message(message["role"]):
                     st.markdown(message["content"])
 
-            # Send extracted text to GPT for further processing
-            if text:
-                # Store and display the current text
-                st.session_state.messages.append({"role": "user", "content": text})
+            # Send extracted info to GPT for further processing
+            if response:
+                st.session_state.messages.append({"role": "user", "content": str(response)})
                 with st.chat_message("user"):
-                    st.markdown(text)
+                    st.markdown(str(response))
 
                 # Generate a response using the OpenAI API
                 stream = client.chat.completions.create(
