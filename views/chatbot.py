@@ -1,13 +1,15 @@
 import streamlit as st
 from openai import OpenAI
 from serpapi import GoogleSearch
-from urllib.parse import urlparse
+from PIL import Image
+import pytesseract
+import io
 
-st.header("SearchGPT" , divider="rainbow")
+st.header("SearchGPT", divider="rainbow")
 
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-openai_api_key=st.secrets["OPENAI_API_KEY"]
-api_key_serp=st.secrets["SERP_API_KEY"]
+openai_api_key = st.secrets["OPENAI_API_KEY"]
+api_key_serp = st.secrets["SERP_API_KEY"]
 
 css_file = "./styles/main.css"
 with open(css_file) as f:
@@ -15,48 +17,55 @@ with open(css_file) as f:
 
 selected_option = st.selectbox("Select an option", ["GPT", "web"])
 
-if selected_option=="GPT":
+if selected_option == "GPT":
     if not openai_api_key:
         st.info("Please add your OpenAI API key to continue.", icon="🗝️")
     else:
-
-    # Create an OpenAI client.
+        # Create OpenAI client
         client = OpenAI(api_key=openai_api_key)
 
-    # Create a session state variable to store the chat messages. This ensures that the
-    # messages persist across reruns.
-        if "messages" not in st.session_state:
-            st.session_state.messages = []
+        # Upload image
+        uploaded_image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
 
-    # Display the existing chat messages via `st.chat_message`.
-        for message in st.session_state.messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
+        if uploaded_image:
+            # Display the uploaded image
+            image = Image.open(uploaded_image)
+            st.image(image, caption="Uploaded Image", use_column_width=True)
 
-    # Create a chat input field to allow the user to enter a message. This will display
-    # automatically at the bottom of the page.
-        if prompt := st.chat_input("What is up?"):
+            # Extract text from the image using pytesseract (OCR)
+            text = pytesseract.image_to_string(image)
+            st.write("Extracted Text from Image:")
+            st.write(text)
 
-        # Store and display the current prompt.
-            st.session_state.messages.append({"role": "user", "content": prompt})
-            with st.chat_message("user"):
-                st.markdown(prompt)
+            if "messages" not in st.session_state:
+                st.session_state.messages = []
 
-        # Generate a response using the OpenAI API.
-            stream = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": m["role"], "content": m["content"]}
-                    for m in st.session_state.messages
-                ],
-                stream=True,
-            )
+            # Display existing chat messages
+            for message in st.session_state.messages:
+                with st.chat_message(message["role"]):
+                    st.markdown(message["content"])
 
-        # Stream the response to the chat using `st.write_stream`, then store it in 
-        # session state.
-            with st.chat_message("assistant"):
-                response = st.write_stream(stream)
-            st.session_state.messages.append({"role": "assistant", "content": response})
+            # Send extracted text to GPT for further processing
+            if text:
+                # Store and display the current text
+                st.session_state.messages.append({"role": "user", "content": text})
+                with st.chat_message("user"):
+                    st.markdown(text)
+
+                # Generate a response using the OpenAI API
+                stream = client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": m["role"], "content": m["content"]}
+                        for m in st.session_state.messages
+                    ],
+                    stream=True,
+                )
+
+                # Stream the response to the chat and store it in session state
+                with st.chat_message("assistant"):
+                    response = st.write_stream(stream)
+                st.session_state.messages.append({"role": "assistant", "content": response})
 
 elif selected_option=="web":
     def fetch_search_results(query):
