@@ -1,11 +1,12 @@
 import streamlit as st
-from openai import OpenAI
+from google.cloud import vision
 from PIL import Image
+import io
+
+# Initialize Google Cloud Vision client
+vision_client = vision.ImageAnnotatorClient()
 
 st.header("SearchGPT", divider="rainbow")
-
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-openai_api_key = st.secrets["OPENAI_API_KEY"]
 
 css_file = "./styles/main.css"
 with open(css_file) as f:
@@ -14,57 +15,40 @@ with open(css_file) as f:
 selected_option = st.selectbox("Select an option", ["GPT", "web"])
 
 if selected_option == "GPT":
-    if not openai_api_key:
-        st.info("Please add your OpenAI API key to continue.", icon="🗝️")
-    else:
-        # Create OpenAI client
-        client = OpenAI(api_key=openai_api_key)
+    # Upload image
+    uploaded_image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
 
-        # Upload image
-        uploaded_image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
+    if uploaded_image:
+        # Display the uploaded image
+        image = Image.open(uploaded_image)
+        st.image(image, caption="Uploaded Image", use_column_width=True)
 
-        if uploaded_image:
-            # Display the uploaded image
-            image = Image.open(uploaded_image)
-            st.image(image, caption="Uploaded Image", use_column_width=True)
+        # Convert the image to bytes for Google Cloud Vision API
+        image_bytes = io.BytesIO()
+        image.save(image_bytes, format='PNG')
+        content = image_bytes.getvalue()
 
-            # Instead of pytesseract, use OpenAI to analyze the image
-            response = client.images.create(
-                model="dalle-mini",
-                file=uploaded_image
-            )
-            st.write("Extracted information from image:")
-            st.write(response)
+        # Call the Google Cloud Vision API to extract text
+        image_for_api = vision.Image(content=content)
+        response = vision_client.text_detection(image=image_for_api)
+        text = response.text_annotations[0].description if response.text_annotations else "No text found."
 
-            if "messages" not in st.session_state:
-                st.session_state.messages = []
+        st.write("Extracted Text from Image:")
+        st.write(text)
 
-            # Display existing chat messages
-            for message in st.session_state.messages:
-                with st.chat_message(message["role"]):
-                    st.markdown(message["content"])
+        if "messages" not in st.session_state:
+            st.session_state.messages = []
 
-            # Send extracted info to GPT for further processing
-            if response:
-                st.session_state.messages.append({"role": "user", "content": str(response)})
-                with st.chat_message("user"):
-                    st.markdown(str(response))
+        # Display existing chat messages
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
 
-                # Generate a response using the OpenAI API
-                stream = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                        {"role": m["role"], "content": m["content"]}
-                        for m in st.session_state.messages
-                    ],
-                    stream=True,
-                )
-
-                # Stream the response to the chat and store it in session state
-                with st.chat_message("assistant"):
-                    response = st.write_stream(stream)
-                st.session_state.messages.append({"role": "assistant", "content": response})
-
+        # Send extracted text to GPT for further processing
+        if text:
+            st.session_state.messages.append({"role": "user", "content": text})
+            with st.chat_message("user"):
+                st.markdown(text)
 elif selected_option=="web":
     def fetch_search_results(query):
         try:
