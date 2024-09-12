@@ -1,51 +1,92 @@
 import streamlit as st
-import requests
+from openai import OpenAI
+from serpapi import GoogleSearch
+from urllib.parse import urlparse
+import boto3
 from PIL import Image
 import io
 
-OCR_SPACE_API_KEY = K87860374888957  # Store your OCR.space API key in Streamlit secrets
+st.header("SearchGPT" , divider="rainbow")
 
-st.header("SearchGPT", divider="rainbow")
+textract_client = boto3.client(
+    'textract',
+    aws_access_key_id=st.secrets["AWS_ACCESS_KEY_ID"],
+    aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"],
+    region_name=st.secrets["REGION_NAME"])
 
-css_file = "./styles/main.css"
-with open(css_file) as f:
-    st.markdown("<style>{}</style>".format(f.read()), unsafe_allow_html=True)
+
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+openai_api_key=st.secrets["OPENAI_API_KEY"]
+
+def extract_text_from_image(uploaded_image):
+    image = Image.open(uploaded_image)
+    st.image(image, caption="Uploaded Image", use_column_width=True)
+    
+    # Convert the image to bytes for AWS Textract
+    image_bytes = io.BytesIO()
+    image.save(image_bytes, format='PNG')
+    image_bytes = image_bytes.getvalue()
+
+    # Call AWS Textract to extract text
+    response = textract_client.detect_document_text(Document={'Bytes': image_bytes})
+    
+    # Extract text from image
+    extracted_text = " ".join([item['Text'] for item in response['Blocks'] if item['BlockType'] == 'LINE'])
+    return extracted_text
 
 selected_option = st.selectbox("Select an option", ["GPT", "web"])
 
-def ocr_space_api(file_path):
-    url = 'https://api.ocr.space/parse/image'
-    payload = {
-        'apikey': OCR_SPACE_API_KEY,
-        'language': 'eng'
-    }
-    with open(file_path, 'rb') as f:
-        response = requests.post(url, files={'file': f}, data=payload)
-    return response.json()
-
-if selected_option == "GPT":
-    uploaded_image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
-
-    if uploaded_image:
-        # Display the uploaded image
-        image = Image.open(uploaded_image)
-        st.image(image, caption="Uploaded Image", use_column_width=True)
-
-        # Save the uploaded image to a temporary location
-        with open("temp_image.png", "wb") as f:
-            f.write(uploaded_image.getvalue())
-
-        # Use OCR.space API to extract text
-        try:
-            result = ocr_space_api("temp_image.png")
-            text = result.get("ParsedResults", [{}])[0].get("ParsedText", "No text found.")
-            st.write("Extracted Text from Image:")
-            st.write(text)
-        except Exception as e:
-            st.error(f"Error extracting text: {e}")
-
+if selected_option=="GPT":
+    if not openai_api_key:
+        st.info("Please add your OpenAI API key to continue.", icon="🗝️")
     else:
-        st.info("Please upload an image.")
+        uploaded_image = st.file_uploader("Upload an image to use its text as a prompt", type=["jpg", "png", "jpeg"])
+        image_text = ""
+    
+        if uploaded_image:
+            image_text = extract_text_from_image(uploaded_image)
+
+    # Create an OpenAI client.
+        client = OpenAI(api_key=openai_api_key)
+
+    # Create a session state variable to store the chat messages. This ensures that the
+    # messages persist across reruns.
+        if "messages" not in st.session_state:
+            st.session_state.messages = []
+
+        
+
+    # Display the existing chat messages via `st.chat_message`.
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
+
+    # Create a chat input field to allow the user to enter a message. This will display
+    # automatically at the bottom of the page.
+        if prompt := st.chat_input("What is up?"):
+
+        # Store and display the current prompt.
+            st.session_state.messages.append({"role": "user", "content": prompt + image_text})
+            with st.chat_message("user"):
+                st.markdown(prompt)
+
+        # Generate a response using the OpenAI API.
+            stream = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": m["role"], "content": m["content"]}
+                    for m in st.session_state.messages
+                ],
+                stream=True,
+            )
+
+        # Stream the response to the chat using `st.write_stream`, then store it in 
+        # session state.
+            with st.chat_message("assistant"):
+                response = st.write_stream(stream)
+            st.session_state.messages.append({"role": "assistant", "content": response})
+
+            print(st.session_state.messages)
 
 elif selected_option=="web":
     def fetch_search_results(query):
@@ -115,6 +156,8 @@ elif selected_option=="web":
                 st.write("No results found.")
         else:
             st.write("Please enter a search query.")
+
+ 
 
  
 
