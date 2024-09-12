@@ -1,10 +1,9 @@
 import streamlit as st
-from google.cloud import vision
+import requests
 from PIL import Image
 import io
 
-# Initialize Google Cloud Vision client
-vision_client = vision.ImageAnnotatorClient()
+OCR_SPACE_API_KEY = K87860374888957  # Store your OCR.space API key in Streamlit secrets
 
 st.header("SearchGPT", divider="rainbow")
 
@@ -14,8 +13,17 @@ with open(css_file) as f:
 
 selected_option = st.selectbox("Select an option", ["GPT", "web"])
 
+def ocr_space_api(file_path):
+    url = 'https://api.ocr.space/parse/image'
+    payload = {
+        'apikey': OCR_SPACE_API_KEY,
+        'language': 'eng'
+    }
+    with open(file_path, 'rb') as f:
+        response = requests.post(url, files={'file': f}, data=payload)
+    return response.json()
+
 if selected_option == "GPT":
-    # Upload image
     uploaded_image = st.file_uploader("Upload an image", type=["jpg", "png", "jpeg"])
 
     if uploaded_image:
@@ -23,32 +31,22 @@ if selected_option == "GPT":
         image = Image.open(uploaded_image)
         st.image(image, caption="Uploaded Image", use_column_width=True)
 
-        # Convert the image to bytes for Google Cloud Vision API
-        image_bytes = io.BytesIO()
-        image.save(image_bytes, format='PNG')
-        content = image_bytes.getvalue()
+        # Save the uploaded image to a temporary location
+        with open("temp_image.png", "wb") as f:
+            f.write(uploaded_image.getvalue())
 
-        # Call the Google Cloud Vision API to extract text
-        image_for_api = vision.Image(content=content)
-        response = vision_client.text_detection(image=image_for_api)
-        text = response.text_annotations[0].description if response.text_annotations else "No text found."
+        # Use OCR.space API to extract text
+        try:
+            result = ocr_space_api("temp_image.png")
+            text = result.get("ParsedResults", [{}])[0].get("ParsedText", "No text found.")
+            st.write("Extracted Text from Image:")
+            st.write(text)
+        except Exception as e:
+            st.error(f"Error extracting text: {e}")
 
-        st.write("Extracted Text from Image:")
-        st.write(text)
+    else:
+        st.info("Please upload an image.")
 
-        if "messages" not in st.session_state:
-            st.session_state.messages = []
-
-        # Display existing chat messages
-        for message in st.session_state.messages:
-            with st.chat_message(message["role"]):
-                st.markdown(message["content"])
-
-        # Send extracted text to GPT for further processing
-        if text:
-            st.session_state.messages.append({"role": "user", "content": text})
-            with st.chat_message("user"):
-                st.markdown(text)
 elif selected_option=="web":
     def fetch_search_results(query):
         try:
