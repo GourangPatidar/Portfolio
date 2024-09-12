@@ -14,7 +14,7 @@ textract_client = boto3.client(
     aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"],
     region_name=st.secrets["REGION_NAME"])
 
-
+api_key_serp=st.secret["SERP_API_KEY"]
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 openai_api_key=st.secrets["OPENAI_API_KEY"]
 
