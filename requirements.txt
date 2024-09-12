@@ -22,5 +22,4 @@ google-search-results
 pinecone
 pinecone-client
 fpdf
-pytesseract
-tesseract
+google-cloud-vision
