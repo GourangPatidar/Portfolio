@@ -1,6 +1,6 @@
 import streamlit as st
 from openai import OpenAI
-from serpapi import GoogleSearch
+#from serpapi import GoogleSearch
 from urllib.parse import urlparse
 import boto3
 from PIL import Image
