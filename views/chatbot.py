@@ -88,7 +88,7 @@ if selected_option=="GPT":
 
             print(st.session_state.messages)
 
-
+'''
 elif selected_option=="web":
     def fetch_search_results(query):
         try:
@@ -157,8 +157,7 @@ elif selected_option=="web":
                 st.write("No results found.")
         else:
             st.write("Please enter a search query.")
-
- 
+'''
 
  
 
